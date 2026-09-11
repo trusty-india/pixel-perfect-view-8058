@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789125645509,
+      "tag": "0000_create_29bricks_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789125693284,
+      "tag": "0001_storage_policies_and_admin_claim",
+      "breakpoints": true
+    }
+  ]
+}
