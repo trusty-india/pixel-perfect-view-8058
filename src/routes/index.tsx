@@ -57,7 +57,7 @@ function Index() {
   const { data: services } = useQuery(servicesQuery());
   const { data: requirements } = useQuery(requirementsQuery(6));
 
-  const banner = activeAnnouncement(announcements as never);
+  const banner = activeAnnouncement(announcements);
 
   return (
     <AppShell>
