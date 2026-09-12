@@ -69,18 +69,18 @@ export const announcementsQuery = queryOptions({
 });
 
 export type ListingFilters = {
-  purpose?: string;
-  propertyType?: string;
-  city?: string;
-  category?: string;
-  search?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  bhk?: string;
-  furnishing?: string;
-  audience?: string;
-  featured?: boolean;
-  limit?: number;
+  purpose?: string | undefined;
+  propertyType?: string | undefined;
+  city?: string | undefined;
+  category?: string | undefined;
+  search?: string | undefined;
+  minPrice?: number | undefined;
+  maxPrice?: number | undefined;
+  bhk?: string | undefined;
+  furnishing?: string | undefined;
+  audience?: string | undefined;
+  featured?: boolean | undefined;
+  limit?: number | undefined;
 };
 
 export function listingsQuery(filters: ListingFilters = {}) {
@@ -151,7 +151,15 @@ export function servicesQuery(type?: string) {
   });
 }
 
-export function activeAnnouncement(rows: { start_time: string | null; end_time: string | null; start_at: string | null; end_at: string | null; is_pinned: boolean }[] | undefined) {
+type AnnouncementWindow = {
+  start_time: string | null;
+  end_time: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  is_pinned: boolean;
+};
+
+export function activeAnnouncement<T extends AnnouncementWindow>(rows: T[] | undefined): T | null {
   if (!rows?.length) return null;
   const now = new Date();
   const hhmm = now.toTimeString().slice(0, 8);
