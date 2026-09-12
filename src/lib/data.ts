@@ -151,7 +151,15 @@ export function servicesQuery(type?: string) {
   });
 }
 
-export function activeAnnouncement(rows: { start_time: string | null; end_time: string | null; start_at: string | null; end_at: string | null; is_pinned: boolean }[] | undefined) {
+type AnnouncementWindow = {
+  start_time: string | null;
+  end_time: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  is_pinned: boolean;
+};
+
+export function activeAnnouncement<T extends AnnouncementWindow>(rows: T[] | undefined): T | null {
   if (!rows?.length) return null;
   const now = new Date();
   const hhmm = now.toTimeString().slice(0, 8);
