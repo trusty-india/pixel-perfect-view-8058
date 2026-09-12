@@ -19,10 +19,10 @@ import { useCity } from "@/lib/city";
 import { BHK_OPTIONS, FURNISHING, PROPERTY_TYPES } from "@/lib/format";
 
 type SearchParams = {
-  q?: string;
-  category?: string;
-  purpose?: string;
-  type?: string;
+  q?: string | undefined;
+  category?: string | undefined;
+  purpose?: string | undefined;
+  type?: string | undefined;
 };
 
 export const Route = createFileRoute("/search")({

@@ -69,18 +69,18 @@ export const announcementsQuery = queryOptions({
 });
 
 export type ListingFilters = {
-  purpose?: string;
-  propertyType?: string;
-  city?: string;
-  category?: string;
-  search?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  bhk?: string;
-  furnishing?: string;
-  audience?: string;
-  featured?: boolean;
-  limit?: number;
+  purpose?: string | undefined;
+  propertyType?: string | undefined;
+  city?: string | undefined;
+  category?: string | undefined;
+  search?: string | undefined;
+  minPrice?: number | undefined;
+  maxPrice?: number | undefined;
+  bhk?: string | undefined;
+  furnishing?: string | undefined;
+  audience?: string | undefined;
+  featured?: boolean | undefined;
+  limit?: number | undefined;
 };
 
 export function listingsQuery(filters: ListingFilters = {}) {
