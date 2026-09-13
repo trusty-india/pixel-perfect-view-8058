@@ -113,6 +113,37 @@ function ListingDetail() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const requestContact = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Please sign in first.");
+      const { error } = await supabase.from("contact_requests").insert({
+        listing_id: id,
+        user_id: user.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => toast.success("Contact request sent. The 29Bricks team will reach out."),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const startChat = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Please sign in first.");
+      const { error } = await supabase.from("conversations").upsert(
+        {
+          listing_id: id,
+          user_id: user.id,
+          party: "buyer",
+          subject: `Enquiry: ${listing?.title ?? "Property"}`,
+        },
+        { onConflict: "listing_id,user_id,party" },
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => toast.success("Chat started. Our team will reply shortly."),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const report = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
@@ -229,6 +260,22 @@ function ListingDetail() {
         >
           <Phone className="size-4" /> Call now
         </a>
+        <Button
+          variant="outline"
+          className="rounded-2xl py-3"
+          disabled={requestContact.isPending}
+          onClick={() => requestContact.mutate()}
+        >
+          <Phone className="mr-2 size-4" /> Request contact
+        </Button>
+        <Button
+          variant="outline"
+          className="rounded-2xl py-3"
+          disabled={startChat.isPending}
+          onClick={() => startChat.mutate()}
+        >
+          <MessageCircle className="mr-2 size-4" /> Chat with 29Bricks
+        </Button>
         <a
           href={`https://wa.me/91${phone.replace(/\D/g, "").slice(-10)}?text=${encodeURIComponent(
             `Hi, I am interested in "${listing.title}" on 29Bricks.`,

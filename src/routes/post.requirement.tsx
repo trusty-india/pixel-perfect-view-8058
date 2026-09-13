@@ -56,10 +56,15 @@ function PostRequirement() {
 
   if (!user && !loading) return <SignInWall />;
 
-  async function submit() {
-    if (title.trim().length < 5) return toast.error("Please describe your need in the title.");
-    if (!phone.trim() || !/^\d{10}$/.test(phone.replace(/\D/g, "").slice(-10)))
-      return toast.error("Enter a valid 10 digit contact number.");
+  async function submit(): Promise<void> {
+    if (title.trim().length < 5) {
+      toast.error("Please describe your need in the title.");
+      return;
+    }
+    if (!phone.trim() || !/^\d{10}$/.test(phone.replace(/\D/g, "").slice(-10))) {
+      toast.error("Enter a valid 10 digit contact number.");
+      return;
+    }
 
     setSaving(true);
     const { error } = await supabase.from("requirements").insert({
@@ -79,7 +84,10 @@ function PostRequirement() {
       contact_phone: phone.trim().slice(0, 15),
     });
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Requirement posted! Our team will reach out soon.");
     navigate({ to: "/requirements" });
   }

@@ -53,10 +53,15 @@ function PostService() {
 
   if (!user && !loading) return <SignInWall />;
 
-  async function submit() {
-    if (name.trim().length < 3) return toast.error("Please enter your business name.");
-    if (!phone.trim() || !/^\d{10}$/.test(phone.replace(/\D/g, "").slice(-10)))
-      return toast.error("Enter a valid 10 digit contact number.");
+  async function submit(): Promise<void> {
+    if (name.trim().length < 3) {
+      toast.error("Please enter your business name.");
+      return;
+    }
+    if (!phone.trim() || !/^\d{10}$/.test(phone.replace(/\D/g, "").slice(-10))) {
+      toast.error("Enter a valid 10 digit contact number.");
+      return;
+    }
 
     setSaving(true);
     const { error } = await supabase.from("services").insert({
@@ -71,7 +76,10 @@ function PostService() {
       price_from: priceFrom ? Number(priceFrom) : null,
     });
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Service submitted! It will be live after review.");
     navigate({ to: "/services" });
   }

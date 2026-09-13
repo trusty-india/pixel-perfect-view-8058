@@ -88,13 +88,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               </SelectContent>
             </Select>
             {isAdmin ? (
-              <Link
-                to="/admin"
+              <a
+                href="/admin"
                 className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary tap-scale"
                 aria-label="Admin panel"
               >
                 <ShieldCheck className="size-4" />
-              </Link>
+              </a>
             ) : null}
           </div>
         </div>

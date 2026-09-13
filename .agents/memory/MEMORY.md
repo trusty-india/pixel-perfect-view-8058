@@ -1,0 +1,1 @@
+- [TanStack route registration](tanstack-route-registration.md) — adding a file route requires refreshing the generated route tree before strict link types recognize it.

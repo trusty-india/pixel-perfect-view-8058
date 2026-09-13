@@ -83,11 +83,19 @@ function PostProperty() {
     }
   }
 
-  async function submit() {
-    if (title.trim().length < 5) return toast.error("Title should be at least 5 characters.");
-    if (!location.trim()) return toast.error("Please add the area / locality.");
-    if (!ownerPhone.trim() || !/^\d{10}$/.test(ownerPhone.replace(/\D/g, "").slice(-10)))
-      return toast.error("Enter a valid 10 digit contact number.");
+  async function submit(): Promise<void> {
+    if (title.trim().length < 5) {
+      toast.error("Title should be at least 5 characters.");
+      return;
+    }
+    if (!location.trim()) {
+      toast.error("Please add the area / locality.");
+      return;
+    }
+    if (!ownerPhone.trim() || !/^\d{10}$/.test(ownerPhone.replace(/\D/g, "").slice(-10))) {
+      toast.error("Enter a valid 10 digit contact number.");
+      return;
+    }
 
     setSaving(true);
     const { data, error } = await supabase
@@ -119,11 +127,18 @@ function PostProperty() {
       return;
     }
 
-    await supabase.from("listing_private").insert({
+    const { error: privateError } = await supabase.from("listing_private").insert({
       listing_id: data.id,
       owner_name: ownerName.trim().slice(0, 100) || null,
       owner_phone: ownerPhone.trim().slice(0, 15),
     });
+
+    if (privateError) {
+      await supabase.from("listings").delete().eq("id", data.id);
+      setSaving(false);
+      toast.error(privateError.message);
+      return;
+    }
 
     setSaving(false);
     toast.success("Property submitted! It will be live after admin review.");
@@ -384,7 +399,7 @@ export function Picker({
   labels?: Record<string, string>;
 }) {
   return (
-    <Select value={value || undefined} onValueChange={onChange}>
+    <Select value={value || ""} onValueChange={onChange}>
       <SelectTrigger>
         <SelectValue placeholder="Select" />
       </SelectTrigger>
