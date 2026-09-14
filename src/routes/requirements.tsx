@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState } from "@/components/section";
 import { requirementsQuery } from "@/lib/data";
@@ -12,14 +11,10 @@ export const Route = createFileRoute("/requirements")({
       { title: "Buyer & tenant requirements — 29Bricks" },
       {
         name: "description",
-        content:
-          "See what buyers and tenants are looking for in Lucknow, or post your own property requirement.",
+        content: "See what buyers and tenants are looking for in Lucknow and match your property.",
       },
       { property: "og:title", content: "Buyer & tenant requirements — 29Bricks" },
-      {
-        property: "og:description",
-        content: "Post what you need and let the right property find you.",
-      },
+      { property: "og:description", content: "Live property requirements from real people." },
     ],
   }),
   component: RequirementsPage,
@@ -30,58 +25,48 @@ function RequirementsPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold">Requirements</h1>
-          <p className="text-xs text-muted-foreground">
-            What buyers and tenants are looking for right now.
-          </p>
+          <h1 className="font-display text-2xl font-bold">Requirements</h1>
+          <p className="text-xs text-muted-foreground">What buyers and tenants need right now.</p>
         </div>
         <Link
           to="/post/requirement"
-          className="ml-auto flex items-center gap-1 rounded-xl gradient-red px-3 py-2 text-xs font-semibold text-brand-foreground tap-scale"
+          className="rounded-full gradient-red px-4 py-2 text-xs font-semibold text-brand-foreground tap-scale"
         >
-          <Plus className="size-4" /> Post need
+          Post yours
         </Link>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {(data ?? []).map((r) => (
-          <div key={r.id} className="rounded-2xl border bg-card p-4 shadow-soft">
-            <div className="flex items-start gap-2">
+          <div key={r.id} className="rounded-2xl border bg-card p-3 shadow-soft">
+            <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-bold">{r.title}</p>
-              <span className="ml-auto text-[11px] text-muted-foreground">
+              <span className="shrink-0 text-[11px] text-muted-foreground">
                 {timeAgo(r.created_at)}
               </span>
             </div>
-            <p className="mt-1 text-xs capitalize text-muted-foreground">
-              {r.purpose}
-              {r.property_type ? ` · ${r.property_type}` : ""} · {r.city}
+            <p className="mt-0.5 text-xs capitalize text-muted-foreground">
+              {r.purpose} · {r.property_type ?? "Any type"} · {r.city}
               {r.location ? `, ${r.location}` : ""}
             </p>
             {r.description ? (
-              <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{r.description}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{r.description}</p>
             ) : null}
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-              {r.bhk ? <span className="rounded-full bg-muted px-2 py-0.5">{r.bhk}</span> : null}
-              {r.area_size ? (
-                <span className="rounded-full bg-muted px-2 py-0.5">{r.area_size}</span>
-              ) : null}
-              <span className="ml-auto text-sm font-bold text-primary">
-                {r.budget_min || r.budget_max
-                  ? `${formatINR(r.budget_min ? Number(r.budget_min) : null)} – ${formatINR(
-                      r.budget_max ? Number(r.budget_max) : null,
-                    )}`
-                  : "Budget flexible"}
-              </span>
-            </div>
+            <p className="mt-2 text-xs font-bold text-primary">
+              {r.budget_min || r.budget_max
+                ? `${formatINR(Number(r.budget_min ?? 0))} – ${formatINR(Number(r.budget_max ?? 0))}`
+                : "Budget flexible"}
+              {r.bhk ? ` · ${r.bhk}` : ""}
+            </p>
           </div>
         ))}
       </div>
 
       {!isLoading && !data?.length ? (
         <div className="mt-4">
-          <EmptyState text="No requirements posted yet. Be the first one." />
+          <EmptyState text="No requirements posted yet." />
         </div>
       ) : null}
     </AppShell>

@@ -2,188 +2,197 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCity } from "@/lib/city";
 import { citiesQuery } from "@/lib/data";
 import { uploadImage } from "@/lib/upload";
 import { SERVICE_TYPES } from "@/lib/format";
-import { Card, Field, Picker, SignInWall } from "./post.property";
 
 export const Route = createFileRoute("/post/service")({
   head: () => ({
     meta: [
-      { title: "List your local service — 29Bricks" },
+      { title: "List your service — 29Bricks" },
       {
         name: "description",
-        content:
-          "Add your packers & movers, electrician, plumber, cleaning or interior business to 29Bricks and get local customers.",
+        content: "Add your home service business — electrician, plumber, movers and more.",
       },
-      { property: "og:title", content: "List your local service — 29Bricks" },
-      {
-        property: "og:description",
-        content: "Get discovered by home owners and tenants in your city.",
-      },
+      { property: "og:title", content: "List your service — 29Bricks" },
+      { property: "og:description", content: "Reach customers looking for local services." },
     ],
   }),
   component: PostService,
 });
 
 function PostService() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile } = useAuth();
   const { city: activeCity } = useCity();
   const navigate = useNavigate();
   const { data: cities } = useQuery(citiesQuery);
-
-  const [name, setName] = useState("");
-  const [serviceType, setServiceType] = useState(SERVICE_TYPES[0]!);
-  const [city, setCity] = useState(activeCity);
-  const [areas, setAreas] = useState("");
-  const [phone, setPhone] = useState(profile?.phone ?? "");
-  const [priceFrom, setPriceFrom] = useState("");
-  const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    service_type: "Electrician",
+    city: activeCity,
+    areas: "",
+    phone: profile?.phone ?? "",
+    price_from: "",
+    description: "",
+  });
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  if (!user && !loading) return <SignInWall />;
-
-  async function submit(): Promise<void> {
-    if (name.trim().length < 3) {
-      toast.error("Please enter your business name.");
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please sign in to list a service.");
+      void navigate({ to: "/auth" });
       return;
     }
-    if (!phone.trim() || !/^\d{10}$/.test(phone.replace(/\D/g, "").slice(-10))) {
-      toast.error("Enter a valid 10 digit contact number.");
+    if (!form.name.trim()) {
+      toast.error("Business name is required.");
       return;
     }
-
     setSaving(true);
-    const { error } = await supabase.from("services").insert({
-      user_id: user!.id,
-      name: name.trim().slice(0, 100),
-      service_type: serviceType,
-      city,
-      areas: areas.trim().slice(0, 200) || null,
-      phone: phone.trim().slice(0, 15),
-      description: description.trim().slice(0, 1000) || null,
-      image_url: imageUrl,
-      price_from: priceFrom ? Number(priceFrom) : null,
-    });
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const image_url = file ? await uploadImage(file, "services") : null;
+      const { data, error } = await supabase
+        .from("services")
+        .insert({
+          user_id: user.id,
+          name: form.name.trim(),
+          service_type: form.service_type,
+          city: form.city,
+          areas: form.areas || null,
+          phone: form.phone || null,
+          price_from: form.price_from ? Number(form.price_from) : null,
+          description: form.description || null,
+          image_url,
+          status: "approved",
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      await supabase.from("leads").insert({
+        source: "service",
+        service_id: data.id,
+        user_id: user.id,
+        name: form.name.trim(),
+        phone: form.phone || profile?.phone || null,
+        message: `New service listed: ${form.service_type}`,
+      });
+
+      toast.success("Service listed! It is live now.");
+      void navigate({ to: "/services" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not list service");
+    } finally {
+      setSaving(false);
     }
-    toast.success("Service submitted! It will be live after review.");
-    navigate({ to: "/services" });
-  }
+  };
 
   return (
     <AppShell>
-      <h1 className="text-lg font-bold">List your service</h1>
+      <h1 className="font-display text-2xl font-bold">List your service</h1>
       <p className="text-xs text-muted-foreground">
-        Free listing · goes live after a quick review.
+        Get calls from customers near you in {form.city}.
       </p>
 
-      <div className="mt-4 grid gap-4">
-        <Card title="Business details">
-          <Field label="Business / person name">
+      <form onSubmit={submit} className="mt-4 grid gap-4 rounded-3xl border bg-card p-4 shadow-soft">
+        <Field label="Business / your name">
+          <Input value={form.name} onChange={(e) => set("name", e.target.value)} />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Service type">
+            <Select value={form.service_type} onValueChange={(v) => set("service_type", v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SERVICE_TYPES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="City">
+            <Select value={form.city} onValueChange={(v) => set("city", v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(cities ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.name} disabled={c.status !== "live"}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Areas covered">
             <Input
-              value={name}
-              maxLength={100}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Sarkar Packers & Movers"
+              value={form.areas}
+              onChange={(e) => set("areas", e.target.value)}
+              placeholder="Gomti Nagar, Indira Nagar"
             />
           </Field>
-          <Field label="Service type">
-            <Picker value={serviceType} onChange={setServiceType} options={SERVICE_TYPES} />
+          <Field label="Contact mobile">
+            <Input
+              inputMode="tel"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
           </Field>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="City">
-              <Picker value={city} onChange={setCity} options={(cities ?? []).map((c) => c.name)} />
-            </Field>
-            <Field label="Areas covered">
-              <Input
-                value={areas}
-                maxLength={200}
-                onChange={(e) => setAreas(e.target.value)}
-                placeholder="Gomti Nagar, Indira Nagar"
-              />
-            </Field>
-          </div>
           <Field label="Starting price (₹)">
             <Input
-              value={priceFrom}
               inputMode="numeric"
-              onChange={(e) => setPriceFrom(e.target.value.replace(/\D/g, ""))}
-              placeholder="499"
+              value={form.price_from}
+              onChange={(e) => set("price_from", e.target.value)}
             />
           </Field>
-          <Field label="About your service">
-            <Textarea
-              value={description}
-              maxLength={1000}
-              rows={4}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What you offer, experience, timings…"
-            />
-          </Field>
-        </Card>
-
-        <Card title="Cover photo">
-          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed p-6 text-sm text-muted-foreground">
-            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-            {uploading ? "Uploading…" : "Upload a photo"}
-            <input
+          <Field label="Cover photo">
+            <Input
               type="file"
               accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                setUploading(true);
-                try {
-                  setImageUrl(await uploadImage(f, "services"));
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "Upload failed");
-                } finally {
-                  setUploading(false);
-                }
-              }}
-            />
-          </label>
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt="Service cover"
-              className="mt-3 aspect-[16/9] w-full rounded-2xl object-cover"
-            />
-          ) : null}
-        </Card>
-
-        <Card title="Contact">
-          <Field label="Mobile number">
-            <Input
-              value={phone}
-              maxLength={15}
-              inputMode="tel"
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="9793045547"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </Field>
-        </Card>
-
-        <Button className="rounded-xl py-6 text-base" disabled={saving} onClick={() => void submit()}>
-          {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-          Submit service
+        </div>
+        <Field label="About your service">
+          <Textarea
+            rows={4}
+            value={form.description}
+            onChange={(e) => set("description", e.target.value)}
+          />
+        </Field>
+        <Button type="submit" disabled={saving} className="rounded-xl">
+          {saving ? "Listing…" : "List service"}
         </Button>
-      </div>
+      </form>
     </AppShell>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-1.5">
+      <Label className="text-xs font-semibold">{label}</Label>
+      {children}
+    </div>
   );
 }

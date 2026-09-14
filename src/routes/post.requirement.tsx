@@ -2,206 +2,246 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCity } from "@/lib/city";
 import { citiesQuery } from "@/lib/data";
 import { BHK_OPTIONS, PROPERTY_TYPES } from "@/lib/format";
-import { Card, Field, Picker, SignInWall } from "./post.property";
 
 export const Route = createFileRoute("/post/requirement")({
   head: () => ({
     meta: [
-      { title: "Post your property requirement — 29Bricks" },
+      { title: "Post your requirement — 29Bricks" },
       {
         name: "description",
-        content:
-          "Tell us the home, room, shop or land you need in Lucknow and get matching options from 29Bricks.",
+        content: "Tell us the property you need and get matching options from 29Bricks.",
       },
-      { property: "og:title", content: "Post your property requirement — 29Bricks" },
-      {
-        property: "og:description",
-        content: "Share your budget and area, and let the right property reach you.",
-      },
+      { property: "og:title", content: "Post your requirement — 29Bricks" },
+      { property: "og:description", content: "Share your budget and locality, we will match you." },
     ],
   }),
   component: PostRequirement,
 });
 
 function PostRequirement() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile } = useAuth();
   const { city: activeCity } = useCity();
   const navigate = useNavigate();
   const { data: cities } = useQuery(citiesQuery);
-
-  const [title, setTitle] = useState("");
-  const [purpose, setPurpose] = useState("buy");
-  const [propertyType, setPropertyType] = useState("");
-  const [city, setCity] = useState(activeCity);
-  const [location, setLocation] = useState("");
-  const [budgetMin, setBudgetMin] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
-  const [bhk, setBhk] = useState("");
-  const [areaSize, setAreaSize] = useState("");
-  const [preferredDate, setPreferredDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [name, setName] = useState(profile?.full_name ?? "");
-  const [phone, setPhone] = useState(profile?.phone ?? "");
   const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    purpose: "rent",
+    property_type: "",
+    city: activeCity,
+    location: "",
+    budget_min: "",
+    budget_max: "",
+    bhk: "",
+    area_size: "",
+    preferred_date: "",
+    description: "",
+    contact_name: profile?.full_name ?? "",
+    contact_phone: profile?.phone ?? "",
+  });
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  if (!user && !loading) return <SignInWall />;
-
-  async function submit(): Promise<void> {
-    if (title.trim().length < 5) {
-      toast.error("Please describe your need in the title.");
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please sign in to post a requirement.");
+      void navigate({ to: "/auth" });
       return;
     }
-    if (!phone.trim() || !/^\d{10}$/.test(phone.replace(/\D/g, "").slice(-10))) {
-      toast.error("Enter a valid 10 digit contact number.");
+    if (!form.title.trim()) {
+      toast.error("Please add a short title.");
       return;
     }
-
     setSaving(true);
-    const { error } = await supabase.from("requirements").insert({
-      user_id: user!.id,
-      title: title.trim().slice(0, 120),
-      purpose,
-      property_type: propertyType || null,
-      city,
-      location: location.trim().slice(0, 120) || null,
-      budget_min: budgetMin ? Number(budgetMin) : null,
-      budget_max: budgetMax ? Number(budgetMax) : null,
-      bhk: bhk || null,
-      area_size: areaSize.trim().slice(0, 60) || null,
-      preferred_date: preferredDate || null,
-      description: description.trim().slice(0, 1000) || null,
-      contact_name: name.trim().slice(0, 100) || null,
-      contact_phone: phone.trim().slice(0, 15),
-    });
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { data, error } = await supabase
+        .from("requirements")
+        .insert({
+          user_id: user.id,
+          title: form.title.trim(),
+          purpose: form.purpose,
+          property_type: form.property_type || null,
+          city: form.city,
+          location: form.location || null,
+          budget_min: form.budget_min ? Number(form.budget_min) : null,
+          budget_max: form.budget_max ? Number(form.budget_max) : null,
+          bhk: form.bhk || null,
+          area_size: form.area_size || null,
+          preferred_date: form.preferred_date || null,
+          description: form.description || null,
+          contact_name: form.contact_name || null,
+          contact_phone: form.contact_phone || null,
+          status: "approved",
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      await supabase.from("leads").insert({
+        source: "requirement",
+        requirement_id: data.id,
+        user_id: user.id,
+        name: form.contact_name || profile?.full_name || null,
+        phone: form.contact_phone || profile?.phone || null,
+        message: form.title.trim(),
+      });
+
+      toast.success("Requirement posted! Our team will contact you.");
+      void navigate({ to: "/requirements" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not post requirement");
+    } finally {
+      setSaving(false);
     }
-    toast.success("Requirement posted! Our team will reach out soon.");
-    navigate({ to: "/requirements" });
-  }
+  };
 
   return (
     <AppShell>
-      <h1 className="text-lg font-bold">Post your requirement</h1>
+      <h1 className="font-display text-2xl font-bold">Post your requirement</h1>
       <p className="text-xs text-muted-foreground">
-        Tell us what you need — we will match it with the right property.
+        Tell us what you need — we will match it with owners.
       </p>
 
-      <div className="mt-4 grid gap-4">
-        <Card title="What are you looking for?">
-          <Field label="Title">
+      <form onSubmit={submit} className="mt-4 grid gap-4 rounded-3xl border bg-card p-4 shadow-soft">
+        <Field label="Title">
+          <Input
+            value={form.title}
+            onChange={(e) => set("title", e.target.value)}
+            placeholder="Need 2 BHK on rent in Gomti Nagar"
+          />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Purpose">
+            <Select value={form.purpose} onValueChange={(v) => set("purpose", v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rent">Rent</SelectItem>
+                <SelectItem value="sale">Buy</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Property type">
+            <Select value={form.property_type} onValueChange={(v) => set("property_type", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROPERTY_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="City">
+            <Select value={form.city} onValueChange={(v) => set("city", v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(cities ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.name} disabled={c.status !== "live"}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Preferred locality">
+            <Input value={form.location} onChange={(e) => set("location", e.target.value)} />
+          </Field>
+          <Field label="Budget min (₹)">
             <Input
-              value={title}
-              maxLength={120}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Need 2 BHK on rent in Gomti Nagar"
+              inputMode="numeric"
+              value={form.budget_min}
+              onChange={(e) => set("budget_min", e.target.value)}
             />
           </Field>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Purpose">
-              <Picker value={purpose} onChange={setPurpose} options={["buy", "rent", "pg", "lease"]} />
-            </Field>
-            <Field label="Property type">
-              <Picker value={propertyType} onChange={setPropertyType} options={PROPERTY_TYPES} />
-            </Field>
-          </div>
-        </Card>
-
-        <Card title="Where & budget">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="City">
-              <Picker value={city} onChange={setCity} options={(cities ?? []).map((c) => c.name)} />
-            </Field>
-            <Field label="Preferred area">
-              <Input
-                value={location}
-                maxLength={120}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Vastu Khand, Gomti Nagar"
-              />
-            </Field>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Budget from (₹)">
-              <Input
-                value={budgetMin}
-                inputMode="numeric"
-                onChange={(e) => setBudgetMin(e.target.value.replace(/\D/g, ""))}
-                placeholder="500000"
-              />
-            </Field>
-            <Field label="Budget up to (₹)">
-              <Input
-                value={budgetMax}
-                inputMode="numeric"
-                onChange={(e) => setBudgetMax(e.target.value.replace(/\D/g, ""))}
-                placeholder="2500000"
-              />
-            </Field>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="BHK">
-              <Picker value={bhk} onChange={setBhk} options={BHK_OPTIONS} />
-            </Field>
-            <Field label="Area size">
-              <Input
-                value={areaSize}
-                maxLength={60}
-                onChange={(e) => setAreaSize(e.target.value)}
-                placeholder="1000 sqft"
-              />
-            </Field>
-          </div>
-          <Field label="Need it by">
+          <Field label="Budget max (₹)">
+            <Input
+              inputMode="numeric"
+              value={form.budget_max}
+              onChange={(e) => set("budget_max", e.target.value)}
+            />
+          </Field>
+          <Field label="BHK">
+            <Select value={form.bhk} onValueChange={(v) => set("bhk", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                {BHK_OPTIONS.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {b}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Area size">
+            <Input value={form.area_size} onChange={(e) => set("area_size", e.target.value)} />
+          </Field>
+          <Field label="Move-in / visit date">
             <Input
               type="date"
-              value={preferredDate}
-              onChange={(e) => setPreferredDate(e.target.value)}
+              value={form.preferred_date}
+              onChange={(e) => set("preferred_date", e.target.value)}
             />
           </Field>
-          <Field label="More details">
-            <Textarea
-              value={description}
-              maxLength={1000}
-              rows={4}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Any specific needs — parking, floor, furnishing…"
-            />
-          </Field>
-        </Card>
-
-        <Card title="Contact details">
           <Field label="Your name">
-            <Input value={name} maxLength={100} onChange={(e) => setName(e.target.value)} />
-          </Field>
-          <Field label="Mobile number">
             <Input
-              value={phone}
-              maxLength={15}
-              inputMode="tel"
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="9793045547"
+              value={form.contact_name}
+              onChange={(e) => set("contact_name", e.target.value)}
             />
           </Field>
-        </Card>
-
-        <Button className="rounded-xl py-6 text-base" disabled={saving} onClick={() => void submit()}>
-          {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-          Post requirement
+          <Field label="Your mobile">
+            <Input
+              inputMode="tel"
+              value={form.contact_phone}
+              onChange={(e) => set("contact_phone", e.target.value)}
+            />
+          </Field>
+        </div>
+        <Field label="Details">
+          <Textarea
+            rows={4}
+            value={form.description}
+            onChange={(e) => set("description", e.target.value)}
+          />
+        </Field>
+        <Button type="submit" disabled={saving} className="rounded-xl">
+          {saving ? "Posting…" : "Post requirement"}
         </Button>
-      </div>
+      </form>
     </AppShell>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-1.5">
+      <Label className="text-xs font-semibold">{label}</Label>
+      {children}
+    </div>
   );
 }
