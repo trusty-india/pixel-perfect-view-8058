@@ -50,11 +50,40 @@ function timeGreeting() {
   return "Good night";
 }
 
+type BannerRow = {
+  id: string;
+  title: string;
+  message: string | null;
+  image_url: string | null;
+  button_text: string | null;
+  button_url: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  is_pinned: boolean;
+};
+
+function heroBanners(rows: BannerRow[] | undefined): BannerRow[] {
+  if (!rows?.length) return [];
+  const now = new Date();
+  const hhmm = now.toTimeString().slice(0, 8);
+  const inWindow = rows.filter((r) => {
+    if (r.start_at && new Date(r.start_at) > now) return false;
+    if (r.end_at && new Date(r.end_at) < now) return false;
+    if (r.start_time && r.end_time) return hhmm >= r.start_time && hhmm <= r.end_time;
+    return true;
+  });
+  // Pinned announcements lead the carousel; the rest follow in admin order.
+  return [...inWindow].sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned));
+}
+
 function Index() {
   const { city } = useCity();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [greeting, setGreeting] = useState("");
+  const [slide, setSlide] = useState(0);
   useEffect(() => {
     setGreeting(timeGreeting());
   }, []);
@@ -66,66 +95,125 @@ function Index() {
   const { data: services } = useQuery(servicesQuery());
   const { data: requirements } = useQuery(requirementsQuery(6));
 
-  const banner = activeAnnouncement(announcements);
+  const banners = heroBanners(announcements as BannerRow[] | undefined);
+  const banner = banners[slide] ?? null;
+
+  // Gentle auto-advance for multi-banner carousels (lightweight; no library).
+  useEffect(() => {
+    if (banners.length < 2) return;
+    const t = setInterval(() => setSlide((s) => (s + 1) % banners.length), 5000);
+    return () => clearInterval(t);
+  }, [banners.length]);
 
   return (
     <AppShell>
-      <div className="rounded-3xl gradient-brand p-5 text-primary-foreground shadow-glow">
-        <p className="text-xs opacity-90">
-          {greeting ? `${greeting} 👋 · ` : ""}
-          {city}
-        </p>
-        <h1 className="mt-1 font-display text-2xl font-bold leading-tight">
-          Find your next home in {city}
-        </h1>
-        <p className="mt-1 text-xs opacity-90">
-          {settings?.description ?? "Property, rooms, shops, land and trusted local services."}
-        </p>
-        <form
-          className="mt-4 flex items-center gap-2 rounded-2xl bg-background p-1.5 pl-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            navigate({ to: "/search", search: { q } });
-          }}
-        >
-          <Search className="size-4 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search area, BHK, shop, land…"
-            className="border-0 bg-transparent px-0 text-foreground shadow-none focus-visible:ring-0"
-          />
-          <button
-            type="submit"
-            className="rounded-xl gradient-red px-4 py-2 text-xs font-semibold text-brand-foreground tap-scale"
-          >
-            Search
-          </button>
-        </form>
-      </div>
-
+      {/* Hero: admin-controlled announcement card first, brand greeting fallback */}
       {banner ? (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-soft">
-          <Sparkles className="size-5 shrink-0 text-brand" />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold">{banner.title}</p>
+        <div
+          key={banner.id}
+          className="rise-in relative overflow-hidden rounded-3xl shadow-card"
+          style={{ aspectRatio: "16 / 10" }}
+        >
+          {banner.image_url ? (
+            <img
+              src={banner.image_url}
+              alt=""
+              className="absolute inset-0 size-full object-cover"
+            />
+          ) : null}
+          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.25_0.08_260/0.92)] via-[oklch(0.3_0.1_262/0.55)] to-[oklch(0.4_0.14_264/0.25)]" />
+          <div className="relative flex size-full flex-col justify-end p-5 text-primary-foreground">
+            <p className="text-xs font-medium opacity-90">{greeting ? `${greeting} 👋` : city}</p>
+            <h1 className="text-shadow-hero mt-1 font-display text-2xl font-bold leading-tight">
+              {banner.title}
+            </h1>
             {banner.message ? (
-              <p className="text-xs text-muted-foreground">{banner.message}</p>
+              <p className="text-shadow-hero mt-1 line-clamp-2 text-sm opacity-95">{banner.message}</p>
+            ) : null}
+            {banner.button_text ? (
+              <a
+                href={banner.button_url || "/search"}
+                className="mt-3 inline-flex w-fit items-center gap-1 rounded-full gradient-red px-4 py-2 text-xs font-bold text-brand-foreground shadow-glow tap-scale"
+              >
+                {banner.button_text} →
+              </a>
             ) : null}
           </div>
+          {banners.length > 1 ? (
+            <div className="absolute right-4 top-4 flex gap-1.5">
+              {banners.map((b, i) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  aria-label={`Announcement ${i + 1}`}
+                  onClick={() => setSlide(i)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === slide ? "w-5 bg-primary-foreground" : "w-1.5 bg-primary-foreground/50"
+                  }`}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      ) : (
+        <div className="rise-in relative overflow-hidden rounded-3xl gradient-hero shadow-card">
+          <div className="p-5 text-primary-foreground">
+            <p className="text-xs opacity-90">
+              {greeting ? `${greeting} 🌞 · ` : ""}
+              {city}
+            </p>
+            <h1 className="mt-1 font-display text-2xl font-bold leading-tight">
+              Find your perfect home
+              <br />
+              with 29Bricks
+            </h1>
+            <p className="mt-1 text-xs opacity-90">
+              {settings?.description ?? "Property, rooms, shops, land and trusted local services."}
+            </p>
+            <Link
+              to="/search"
+              className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-primary-foreground px-4 py-2 text-xs font-bold text-primary shadow-glow tap-scale"
+            >
+              Explore Now →
+            </Link>
+          </div>
+          <Sparkles className="float-soft absolute -right-3 -top-3 size-24 text-primary-foreground/15" />
+        </div>
+      )}
+
+      {/* Search bar */}
+      <form
+        className="mt-4 flex items-center gap-2 rounded-2xl border bg-card p-2 pl-3.5 shadow-soft"
+        onSubmit={(e) => {
+          e.preventDefault();
+          navigate({ to: "/search", search: { q } });
+        }}
+      >
+        <Search className="size-4 shrink-0 text-muted-foreground" />
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search property, room, shop, land or location…"
+          className="border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
+        />
+        <button
+          type="submit"
+          className="shrink-0 rounded-xl gradient-red px-4 py-2 text-xs font-semibold text-brand-foreground tap-scale"
+        >
+          Search
+        </button>
+      </form>
 
       <Section title="Browse categories">
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-4">
           {(categories ?? []).map((c) => (
             <Link
               key={c.id}
               to="/search"
               search={{ category: c.slug }}
-              className="flex flex-col items-center gap-1.5 rounded-2xl border bg-card p-3 text-center shadow-soft tap-scale"
+              className="flex flex-col items-center gap-1.5 rounded-2xl border bg-card p-2.5 text-center shadow-soft tap-scale"
             >
-              <span className="grid size-10 place-items-center rounded-xl gradient-sky text-lg">
+              <span className="grid size-12 place-items-center rounded-2xl gradient-sky text-xl shadow-soft">
                 {c.icon ?? "🏠"}
               </span>
               <span className="text-[11px] font-semibold leading-tight">{c.name}</span>
@@ -140,7 +228,7 @@ function Index() {
         <QuickLink to="/student" icon={<GraduationCap className="size-4" />} label="Student Zone" />
       </div>
 
-      <Section title="Featured properties" action="See all" actionTo="/search">
+      <Section title="🔥 Featured properties" action="View all" actionTo="/search">
         {featured?.length ? (
           <HScroll>
             {(featured as ListingRow[]).map((l) => (
@@ -152,9 +240,9 @@ function Index() {
         )}
       </Section>
 
-      <Section title="Latest listings" action="See all" actionTo="/search">
+      <Section title="🏠 Latest listings" action="View all" actionTo="/search">
         {latest?.length ? (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(latest as ListingRow[]).map((l) => (
               <ListingCard key={l.id} listing={l} />
             ))}
@@ -164,19 +252,24 @@ function Index() {
         )}
       </Section>
 
-      <Section title="Local services" action="See all" actionTo="/services">
+      <Section title="🚚 Popular services" action="View all" actionTo="/services">
         {services?.length ? (
           <HScroll>
             {services.slice(0, 10).map((s) => (
               <div
                 key={s.id}
-                className="w-[190px] shrink-0 rounded-2xl border bg-card p-3 shadow-soft"
+                className="w-[190px] shrink-0 overflow-hidden rounded-2xl border bg-card shadow-soft tap-scale"
               >
-                <p className="text-sm font-semibold">{s.name}</p>
-                <p className="text-xs text-muted-foreground">{s.service_type}</p>
-                <p className="mt-1 text-xs font-semibold text-primary">
-                  {s.price_from ? `From ${formatINR(Number(s.price_from))}` : "Price on request"}
-                </p>
+                {s.image_url ? (
+                  <img src={s.image_url} alt={s.name} loading="lazy" className="h-24 w-full object-cover" />
+                ) : null}
+                <div className="space-y-1 p-3">
+                  <p className="text-sm font-semibold">{s.name}</p>
+                  <p className="text-xs text-muted-foreground">{s.service_type}</p>
+                  <p className="text-xs font-semibold text-primary">
+                    {s.price_from ? `From ${formatINR(Number(s.price_from))}` : "Price on request"}
+                  </p>
+                </div>
               </div>
             ))}
           </HScroll>
@@ -185,7 +278,7 @@ function Index() {
         )}
       </Section>
 
-      <Section title="Buyer requirements" action="See all" actionTo="/requirements">
+      <Section title="🔎 People looking for property" action="View all" actionTo="/requirements">
         {requirements?.length ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {requirements.map((r) => (

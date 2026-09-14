@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ListingCard, type ListingRow } from "@/components/listing-card";
 import { EmptyState } from "@/components/section";
@@ -17,6 +17,7 @@ import {
 import { listingsQuery } from "@/lib/data";
 import { useCity } from "@/lib/city";
 import { BHK_OPTIONS, FURNISHING, PROPERTY_TYPES } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 type SearchParams = {
   q?: string | undefined;
@@ -27,10 +28,10 @@ type SearchParams = {
 
 export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>): SearchParams => ({
-    q: typeof search['q'] === "string" ? search['q'] : undefined,
-    category: typeof search['category'] === "string" ? search['category'] : undefined,
-    purpose: typeof search['purpose'] === "string" ? search['purpose'] : undefined,
-    type: typeof search['type'] === "string" ? search['type'] : undefined,
+    q: typeof search["q"] === "string" ? search["q"] : undefined,
+    category: typeof search["category"] === "string" ? search["category"] : undefined,
+    purpose: typeof search["purpose"] === "string" ? search["purpose"] : undefined,
+    type: typeof search["type"] === "string" ? search["type"] : undefined,
   }),
   head: () => ({
     meta: [
@@ -72,8 +73,11 @@ function SearchPage() {
     }),
   );
 
+  const results = (data as ListingRow[] | undefined) ?? [];
+
   return (
     <AppShell>
+      {/* Search header */}
       <form
         className="flex gap-2"
         onSubmit={(e) => {
@@ -81,25 +85,29 @@ function SearchPage() {
           void navigate({ search: (prev: SearchParams) => ({ ...prev, q: text || undefined }) });
         }}
       >
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Search area, title, type…"
-          className="rounded-xl"
-        />
-        <Button type="submit" className="rounded-xl">
-          Search
-        </Button>
+        <div className="flex flex-1 items-center gap-2 rounded-2xl border bg-card px-3.5 py-1 shadow-soft">
+          <Search className="size-4 shrink-0 text-muted-foreground" />
+          <Input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Search location, property or keyword…"
+            className="rounded-xl border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+          />
+        </div>
         <Button
           type="button"
           variant="outline"
-          className="rounded-xl"
+          size="icon"
+          className={cn("size-11 shrink-0 rounded-2xl shadow-soft", showFilters && "border-brand/60 text-brand")}
+          aria-label="Toggle filters"
+          aria-expanded={showFilters}
           onClick={() => setShowFilters((v) => !v)}
         >
           <SlidersHorizontal className="size-4" />
         </Button>
       </form>
 
+      {/* Purpose chips */}
       <div className="mt-3 flex flex-wrap gap-2">
         {["all", "sale", "rent"].map((p) => (
           <button
@@ -110,25 +118,26 @@ function SearchPage() {
                 search: (prev: SearchParams) => ({ ...prev, purpose: p === "all" ? undefined : p }),
               })
             }
-            className={`rounded-full border px-3 py-1.5 text-xs font-semibold capitalize tap-scale ${
+            className={cn(
+              "rounded-full border px-4 py-1.5 text-xs font-semibold capitalize tap-scale",
               (params.purpose ?? "all") === p
-                ? "gradient-red border-transparent text-brand-foreground"
-                : "bg-card"
-            }`}
+                ? "gradient-red border-transparent text-brand-foreground shadow-soft"
+                : "bg-card",
+            )}
           >
-            {p === "all" ? "All" : `For ${p}`}
+            {p === "all" ? "All" : p === "sale" ? "For Sale" : "For Rent"}
           </button>
         ))}
       </div>
 
       {showFilters ? (
-        <div className="mt-3 grid gap-3 rounded-2xl border bg-card p-3 shadow-soft sm:grid-cols-2">
+        <div className="rise-in mt-3 grid gap-3 rounded-2xl border bg-card p-3 shadow-soft sm:grid-cols-2">
           <Select
             value={params.type ?? ""}
             onValueChange={(v) => void navigate({ search: (prev: SearchParams) => ({ ...prev, type: v }) })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Property type" />
+              <SelectValue placeholder="Property Type" />
             </SelectTrigger>
             <SelectContent>
               {PROPERTY_TYPES.map((t) => (
@@ -176,15 +185,34 @@ function SearchPage() {
               onChange={(e) => setMaxPrice(e.target.value)}
             />
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setBhk("");
+              setFurnishing("");
+              setMinPrice("");
+              setMaxPrice("");
+              void navigate({ search: (prev: SearchParams) => ({ ...prev, type: undefined }) });
+            }}
+            className="col-span-full flex items-center justify-center gap-1 text-xs font-semibold text-brand"
+          >
+            <X className="size-3.5" /> Clear filters
+          </button>
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {(data as ListingRow[] | undefined)?.map((l) => (
+      {/* Results count */}
+      <p className="mt-4 text-xs font-semibold text-muted-foreground">
+        {isLoading ? "Searching…" : `${results.length} propert${results.length === 1 ? "y" : "ies"} found`}
+        {city ? ` in ${city}` : ""}
+      </p>
+
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {results.map((l) => (
           <ListingCard key={l.id} listing={l} />
         ))}
       </div>
-      {!isLoading && !data?.length ? (
+      {!isLoading && !results.length ? (
         <div className="mt-4">
           <EmptyState text="No properties match your search. Try changing filters or city." />
         </div>
