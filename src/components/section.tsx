@@ -32,7 +32,7 @@ export function Section({
   );
 }
 
-export function EmptyState({ text }: { text: string }) {
+export function EmptyState({ text }: { text: ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed bg-card/60 p-6 text-center text-sm text-muted-foreground">
       {text}

@@ -78,7 +78,7 @@ function SearchPage() {
         className="flex gap-2"
         onSubmit={(e) => {
           e.preventDefault();
-          void navigate({ search: (prev) => ({ ...prev, q: text || undefined }) });
+          void navigate({ search: (prev: SearchParams) => ({ ...prev, q: text || undefined }) });
         }}
       >
         <Input
@@ -107,7 +107,7 @@ function SearchPage() {
             type="button"
             onClick={() =>
               void navigate({
-                search: (prev) => ({ ...prev, purpose: p === "all" ? undefined : p }),
+                search: (prev: SearchParams) => ({ ...prev, purpose: p === "all" ? undefined : p }),
               })
             }
             className={`rounded-full border px-3 py-1.5 text-xs font-semibold capitalize tap-scale ${
@@ -125,7 +125,7 @@ function SearchPage() {
         <div className="mt-3 grid gap-3 rounded-2xl border bg-card p-3 shadow-soft sm:grid-cols-2">
           <Select
             value={params.type ?? ""}
-            onValueChange={(v) => void navigate({ search: (prev) => ({ ...prev, type: v }) })}
+            onValueChange={(v) => void navigate({ search: (prev: SearchParams) => ({ ...prev, type: v }) })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Property type" />
