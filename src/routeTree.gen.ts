@@ -11,9 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as RequirementsRouteImport } from './routes/requirements'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as ServicesRouteImport } from './routes/services'
+import { Route as StudentRouteImport } from './routes/student'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
+import { Route as PostPropertyRouteImport } from './routes/post.property'
+import { Route as PostRequirementRouteImport } from './routes/post.requirement'
+import { Route as PostServiceRouteImport } from './routes/post.service'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequirementsRoute = RequirementsRouteImport.update({
+  id: '/requirements',
+  path: '/requirements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SavedRoute = SavedRouteImport.update({
@@ -35,48 +46,131 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ListingIdRoute = ListingIdRouteImport.update({
   id: '/listing/$id',
   path: '/listing/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostPropertyRoute = PostPropertyRouteImport.update({
+  id: '/post/property',
+  path: '/post/property',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostRequirementRoute = PostRequirementRouteImport.update({
+  id: '/post/requirement',
+  path: '/post/requirement',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostServiceRoute = PostServiceRouteImport.update({
+  id: '/post/service',
+  path: '/post/service',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/requirements': typeof RequirementsRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
+  '/student': typeof StudentRoute
   '/listing/$id': typeof ListingIdRoute
+  '/post/property': typeof PostPropertyRoute
+  '/post/requirement': typeof PostRequirementRoute
+  '/post/service': typeof PostServiceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/requirements': typeof RequirementsRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
+  '/student': typeof StudentRoute
   '/listing/$id': typeof ListingIdRoute
+  '/post/property': typeof PostPropertyRoute
+  '/post/requirement': typeof PostRequirementRoute
+  '/post/service': typeof PostServiceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/requirements': typeof RequirementsRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
+  '/student': typeof StudentRoute
   '/listing/$id': typeof ListingIdRoute
+  '/post/property': typeof PostPropertyRoute
+  '/post/requirement': typeof PostRequirementRoute
+  '/post/service': typeof PostServiceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/saved' | '/search' | '/listing/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/requirements'
+    | '/saved'
+    | '/search'
+    | '/services'
+    | '/student'
+    | '/listing/$id'
+    | '/post/property'
+    | '/post/requirement'
+    | '/post/service'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/saved' | '/search' | '/listing/$id'
-  id: '__root__' | '/' | '/auth' | '/saved' | '/search' | '/listing/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/requirements'
+    | '/saved'
+    | '/search'
+    | '/services'
+    | '/student'
+    | '/listing/$id'
+    | '/post/property'
+    | '/post/requirement'
+    | '/post/service'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/requirements'
+    | '/saved'
+    | '/search'
+    | '/services'
+    | '/student'
+    | '/listing/$id'
+    | '/post/property'
+    | '/post/requirement'
+    | '/post/service'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  RequirementsRoute: typeof RequirementsRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
+  ServicesRoute: typeof ServicesRoute
+  StudentRoute: typeof StudentRoute
   ListingIdRoute: typeof ListingIdRoute
+  PostPropertyRoute: typeof PostPropertyRoute
+  PostRequirementRoute: typeof PostRequirementRoute
+  PostServiceRoute: typeof PostServiceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -95,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/requirements': {
+      id: '/requirements'
+      path: '/requirements'
+      fullPath: '/requirements'
+      preLoaderRoute: typeof RequirementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/saved': {
       id: '/saved'
       path: '/saved'
@@ -109,11 +210,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/listing/$id': {
       id: '/listing/$id'
       path: '/listing/$id'
       fullPath: '/listing/$id'
       preLoaderRoute: typeof ListingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post/property': {
+      id: '/post/property'
+      path: '/post/property'
+      fullPath: '/post/property'
+      preLoaderRoute: typeof PostPropertyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post/requirement': {
+      id: '/post/requirement'
+      path: '/post/requirement'
+      fullPath: '/post/requirement'
+      preLoaderRoute: typeof PostRequirementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post/service': {
+      id: '/post/service'
+      path: '/post/service'
+      fullPath: '/post/service'
+      preLoaderRoute: typeof PostServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -122,9 +258,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  RequirementsRoute: RequirementsRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
+  ServicesRoute: ServicesRoute,
+  StudentRoute: StudentRoute,
   ListingIdRoute: ListingIdRoute,
+  PostPropertyRoute: PostPropertyRoute,
+  PostRequirementRoute: PostRequirementRoute,
+  PostServiceRoute: PostServiceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
