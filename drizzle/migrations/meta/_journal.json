@@ -15,6 +15,13 @@
       "when": 1789125693284,
       "tag": "0001_storage_policies_and_admin_claim",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789287900000,
+      "tag": "0002_storage_buckets_and_policies",
+      "breakpoints": true
     }
   ]
 }
