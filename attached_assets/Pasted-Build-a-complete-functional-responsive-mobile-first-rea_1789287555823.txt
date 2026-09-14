@@ -1,0 +1,946 @@
+Build a complete functional, responsive, mobile-first real-estate and local services marketplace called **29Bricks**, powered by **Sarkar Properties**.
+
+Management / Managing Director: **Seema Sarkar**
+
+Default Admin Contact:
+Mobile: **9793045547**
+Address: **Vastu Khand, Lucknow**
+
+IMPORTANT: Admin must be able to change the mobile number, address, name, profile photo and other public business information anytime from Admin Settings without changing code.
+
+Primary launch city:
+**Lucknow — LIVE**
+
+Other cities:
+**Varanasi — COMING SOON**
+**Kanpur — COMING SOON**
+
+Admin must have complete control over city activation.
+
+---
+
+# 1. TECHNOLOGY
+
+Use:
+
+* React
+* Vite
+* Supabase
+* Supabase Auth
+* Supabase PostgreSQL
+* Supabase Storage
+
+This must be a real functional application, NOT a static UI mockup.
+
+Use proper:
+
+* Authentication
+* Database relationships
+* Role-based permissions
+* Supabase Row Level Security
+* Image upload/storage
+* Real-time chat where appropriate
+
+Do not create fake buttons or fake workflows.
+
+---
+
+# 2. DESIGN
+
+Create a premium, modern, trustworthy Indian property marketplace.
+
+Color theme:
+
+* White
+* Light background
+* Red
+* Royal Blue
+* Soft Sky Blue
+* Subtle gradients
+
+Use:
+
+* Rounded cards
+* Soft shadows
+* Clean typography
+* Glass effects carefully
+* Smooth animations
+* Micro-interactions
+* Excellent mobile spacing
+
+Avoid:
+
+* Harsh neon colors
+* Excessive dark UI
+* Overloaded screens
+* Heavy animations that slow the app
+
+The interface must look premium but remain extremely easy for normal users.
+
+---
+
+# 3. HOME PAGE
+
+Header:
+
+29Bricks logo
+Powered by Sarkar Properties
+
+Location selector:
+📍 Lucknow
+
+Search:
+“Search property, room, shop, land or location…”
+
+Main animated category cards:
+
+🏠 Buy Property
+🔑 Rent Property
+🏞️ Land / Plot
+🏪 Shop / Commercial
+🛏️ Room / PG
+🎓 Student Stay
+🚚 Services
+📦 Packers & Movers
+
+Category buttons should have:
+
+* Attractive icons
+* Soft gradients
+* Tap animation
+* Smooth scale effect
+* Small floating animation
+* Clear title/subtitle
+
+Do not make animations excessive.
+
+Home sections:
+
+🔥 Featured Properties
+🏠 Latest Listings
+🛏️ Rooms Near You
+🎓 Student Zone
+🏪 Shops & Commercial
+🔎 People Looking For Property
+🚚 Popular Services
+📍 Popular Locations
+
+---
+
+# 4. ADMIN-CONTROLLED HOME ANNOUNCEMENTS
+
+Admin must be able to create promotional messages shown on the Home Page.
+
+Examples:
+
+“Good Morning 🌞
+Find your perfect home with 29Bricks”
+
+“Good Evening 🌆
+New properties added in Lucknow”
+
+“🎉 Special Offer
+Book a property visit today”
+
+Admin can create:
+
+* Greeting
+* Announcement
+* Offer
+* Promotional banner
+* Festival message
+* Important notice
+
+Admin controls:
+
+* Text
+* Image/banner
+* Start date
+* End date
+* Time
+* Active/inactive
+* Display position
+* Button text
+* Button action
+
+Allow Admin to schedule different messages at different times.
+
+Example:
+Morning → Good Morning
+Afternoon → Welcome
+Evening → Good Evening
+
+Admin can manually override scheduled messages anytime.
+
+---
+
+# 5. BUSINESS PROFILE CONTROL
+
+Create Admin Settings for public business information.
+
+Default:
+
+Business:
+29Bricks
+
+Powered by:
+Sarkar Properties
+
+Management:
+Seema Sarkar
+
+Mobile:
+9793045547
+
+Address:
+Vastu Khand, Lucknow
+
+Admin can change anytime:
+
+* Business name
+* Logo
+* Admin profile photo
+* Management name
+* Mobile number
+* WhatsApp number
+* Address
+* Email
+* Business description
+* Social links
+* Public contact information
+
+Changes should automatically reflect throughout the application.
+
+DO NOT hard-code these values into components.
+
+Store them in an Admin-controlled settings table.
+
+---
+
+# 6. ADMIN PROFILE PHOTO / DP
+
+Admin must be able to upload/change their profile photo from Admin Settings.
+
+Admin can:
+
+* Upload DP
+* Change DP
+* Remove DP
+* Replace DP
+
+The current Admin DP should automatically appear wherever the Admin profile is publicly shown.
+
+Example:
+Admin chat
+Business profile
+Contact screen
+Announcements if applicable
+
+Use Supabase Storage for the image.
+
+---
+
+# 7. PROPERTY LISTINGS
+
+Users can submit:
+
+House
+Flat
+Room
+PG
+Sharing Room
+Student Room
+Shop
+Office
+Commercial Space
+Land / Plot
+Other Property
+
+Fields:
+
+Title
+Category
+Buy/Rent
+Price/Rent
+Location
+Address
+Area/Size
+BHK
+Furnishing
+Facilities
+Description
+Availability
+Images
+Owner details
+
+Allow multiple images.
+
+Workflow:
+
+User submits
+↓
+Pending Review
+↓
+Admin Review
+↓
+Approved
+↓
+Live
+
+Never automatically publish an unapproved listing.
+
+---
+
+# 8. DEMAND / REQUIREMENT SYSTEM
+
+Users must ALSO be able to tell 29Bricks what they need.
+
+Create a large:
+
+📢 POST YOUR REQUIREMENT
+
+button.
+
+Examples:
+
+“I need a room near Lucknow University”
+
+“I need a 2 BHK in Gomti Nagar under ₹20,000”
+
+“I need a shop in Aliganj”
+
+“I need 1000 sqft land in Lucknow”
+
+“I need a flat near BHU”
+
+“I need a PG/sharing room”
+
+Requirement fields:
+
+Requirement title
+Buy/Rent
+Property type
+Preferred city
+Preferred location
+Budget
+BHK/size
+Preferred date
+Description
+Contact details
+
+Requirement also follows:
+
+Pending Review → Admin Review → Approved → Live
+
+Create:
+
+🔎 People Looking For Property
+
+This becomes a major lead-generation section for 29Bricks.
+
+---
+
+# 9. PROPERTY-SPECIFIC ADMIN CHAT SYSTEM
+
+IMPORTANT NEW FEATURE.
+
+Every property listing must have its own Admin-managed communication thread.
+
+For a property:
+
+Example:
+
+3 BHK House
+Gomti Nagar
+₹45,00,000
+
+Create separate conversations:
+
+### Seller / Owner Chat
+
+Owner ↔ Admin
+
+### Buyer / Renter Chat
+
+Interested User ↔ Admin
+
+Admin can open both conversations from the same property page.
+
+Admin can see:
+
+Property
+Owner
+Interested customer
+Messages
+Date/time
+Lead status
+Notes
+
+Admin can communicate with the owner and customer separately.
+
+DO NOT expose the owner's private mobile number to the buyer.
+
+DO NOT expose the buyer's private number to the owner unless Admin intentionally chooses a public/contact setting.
+
+The system should identify conversations by:
+
+Property ID + User ID + Admin ID
+
+so Admin can manage multiple buyers for the same property.
+
+Example:
+
+Property A
+
+* Owner chat
+* Buyer 1 chat
+* Buyer 2 chat
+* Buyer 3 chat
+
+Admin can manage all of them.
+
+---
+
+# 10. CHAT FEATURES
+
+Real-time chat using Supabase where appropriate.
+
+Features:
+
+Text messages
+Image sharing if needed
+Message timestamps
+Read/unread status
+Notifications
+Property reference
+User name
+Admin DP
+Online/last active indicator where appropriate
+
+Admin can:
+
+* Reply
+* Delete inappropriate messages
+* Block user
+* Close conversation
+* Mark lead status
+* Add internal notes
+
+Internal Admin notes must NEVER be visible to customers.
+
+Keep personal phone numbers private.
+
+---
+
+# 11. CONTACT PRIVACY
+
+Owner's original mobile number must NEVER automatically appear publicly.
+
+Store original contact securely.
+
+Public buttons:
+
+📞 Request Contact
+💬 Chat with 29Bricks
+📅 Book a Visit
+
+Admin can choose:
+
+Hide Owner Number
+Show 29Bricks Number
+Set Custom Public Number
+
+Default public business number:
+
+9793045547
+
+Admin can change this number anytime.
+
+If Admin changes the public number, all relevant public contact buttons should use the new number automatically.
+
+---
+
+# 12. PROPERTY ACTIONS
+
+Every approved property can have:
+
+❤️ Save
+📤 Share
+📞 Request Contact
+💬 Chat with 29Bricks
+📅 Book a Visit
+💰 Make an Offer
+📢 Report Listing
+
+---
+
+# 13. OFFER SYSTEM
+
+Buyer/renter can submit an offer.
+
+Example:
+
+Listed:
+₹45,00,000
+
+Offer:
+₹41,00,000
+
+Admin receives the offer.
+
+Admin can:
+Accept
+Reject
+Counter Offer
+Close Offer
+
+Admin can also create promotional offers from the Admin Panel.
+
+Offer banners can appear on Home Page.
+
+---
+
+# 14. BROKER SYSTEM
+
+Broker registration:
+
+Name
+Photo
+Experience
+Service areas
+Property categories
+Verification
+
+Broker must be approved by Admin.
+
+Admin controls:
+
+* Approve
+* Reject
+* Suspend
+* Assign leads
+* Assign properties
+* Commission
+* Commission status
+
+Commission can be:
+Percentage
+Fixed amount
+
+---
+
+# 15. LEAD MANAGEMENT
+
+Create a central Admin Lead Management system.
+
+Leads can come from:
+
+Property enquiry
+Requirement post
+Contact request
+Book Visit
+Offer
+Chat
+Service request
+Broker enquiry
+
+Lead statuses:
+
+New
+Contacted
+Interested
+Visit Scheduled
+Negotiation
+Booked
+Sold
+Rented
+Closed
+Lost
+
+Admin can assign a lead to an approved broker.
+
+---
+
+# 16. MATCHING SYSTEM
+
+Match:
+
+Available Properties ↔ Customer Requirements
+
+Use:
+
+City
+Location
+Property Type
+Buy/Rent
+Budget
+BHK
+Area
+
+Example:
+
+Customer requirement:
+2 BHK
+Gomti Nagar
+Rent
+₹20,000
+
+Available listing:
+2 BHK
+Gomti Nagar
+Rent
+₹18,000
+
+Show:
+
+“🎯 Possible Match”
+
+Admin can open the match and contact both sides through the property-specific Admin Chat system.
+
+---
+
+# 17. SEARCH
+
+Simple smart search:
+
+“2 BHK Gomti Nagar ₹20,000”
+
+“Room near Lucknow University”
+
+“Shop in Aliganj”
+
+“Land near Sultanpur Road”
+
+Filters:
+
+Location
+Buy/Rent
+Property Type
+Budget
+BHK
+Area
+Furnished/Unfurnished
+Student/Family
+Distance
+Availability
+
+---
+
+# 18. STUDENT ZONE
+
+Create dedicated:
+
+🎓 STUDENT ZONE
+
+Categories:
+
+Student Rooms
+PG
+Sharing Rooms
+Hostels
+Flatmates
+Rooms near colleges
+Mess/Tiffin
+Laundry
+Wi-Fi
+Study-friendly rooms
+Moving Services
+
+Allow college/university + distance search.
+
+---
+
+# 19. SERVICES
+
+Services marketplace:
+
+Packers & Movers
+Electrician
+Plumber
+Carpenter
+Painter
+AC Repair
+RO Service
+Cleaning
+Pest Control
+CCTV
+Interior Design
+Architect
+Civil Contractor
+Renovation
+Furniture
+Appliance Repair
+Water Tanker
+Security
+Other Services
+
+Service providers require Admin approval.
+
+---
+
+# 20. CITY MANAGEMENT
+
+Cities MUST NOT be hard-coded.
+
+Default:
+
+Lucknow — LIVE
+Varanasi — COMING SOON
+Kanpur — COMING SOON
+
+Admin can instantly change:
+
+COMING SOON → LIVE
+LIVE → COMING SOON
+
+Admin can:
+Add city
+Edit city
+Deactivate city
+Change city image
+Change city description
+
+Admin can add future cities without code changes.
+
+---
+
+# 21. ADMIN DASHBOARD
+
+Create a powerful protected Admin Panel.
+
+Dashboard cards:
+
+Total Listings
+Pending Listings
+Approved Listings
+Requirements
+New Leads
+Contact Requests
+Visit Requests
+Offers
+Users
+Brokers
+Service Providers
+Commission
+
+Admin menu:
+
+Dashboard
+Listings
+Requirements
+Users
+Brokers
+Services
+Leads
+Offers
+Chat
+Commission
+Cities & Locations
+Categories
+Homepage
+Announcements
+Featured Listings
+Reports
+Business Profile
+Settings
+Logout
+
+---
+
+# 22. LISTING ADMIN CONTROL
+
+Admin can:
+
+Approve
+Reject
+Edit
+Delete
+Hide
+Unpublish
+Feature
+Change price
+Change images
+Change description
+Change location
+Change status
+Change public contact number
+View original owner contact
+View enquiries
+Open property chat
+
+Admin must have complete control over listings.
+
+---
+
+# 23. USER MANAGEMENT
+
+Admin can:
+
+View users
+View profile
+Block
+Unblock
+Delete
+Verify
+View user's listings
+View requirements
+View leads
+View relevant chat history
+
+Users must never access Admin functions.
+
+---
+
+# 24. ADMIN BUSINESS CONTROL
+
+Admin can change without code:
+
+Logo
+Admin DP
+Business name
+Management name
+Mobile number
+WhatsApp number
+Email
+Address
+Business description
+Public contact number
+Homepage announcements
+Offers
+Cities
+Categories
+Featured listings
+Commission
+Contact settings
+
+Default mobile:
+9793045547
+
+Default address:
+Vastu Khand, Lucknow
+
+---
+
+# 25. MOBILE NAVIGATION
+
+Bottom navigation:
+
+🏠 Home
+🔎 Search
+➕ Post
+❤️ Saved
+👤 Profile
+
+Central + Post button opens:
+
+Post Property
+Post Requirement
+Post Service
+
+Make the central button visually attractive and animated.
+
+---
+
+# 26. POST MENU
+
+User can choose:
+
+🏠 Post Property
+📢 Post Requirement
+🔧 Post Service
+
+Examples:
+
+Owner:
+“I want to rent my room”
+
+Owner:
+“I want to sell my land”
+
+Shop owner:
+“I want to rent my shop”
+
+Customer:
+“I need a room”
+
+Customer:
+“I need a shop”
+
+Customer:
+“I need a flat”
+
+This two-sided marketplace is essential.
+
+---
+
+# 27. SECURITY
+
+Use Supabase Row Level Security.
+
+Important:
+
+Original owner mobile number:
+Admin only.
+
+Admin controls:
+Admin only.
+
+Private Admin notes:
+Admin only.
+
+Admin chat:
+Only relevant Admin + relevant user.
+
+Users cannot access another user's private information.
+
+Users cannot modify approved listings unless allowed through the proper workflow.
+
+---
+
+# 28. PERFORMANCE
+
+Keep the application lightweight and mobile optimized.
+
+Avoid:
+Unnecessary realtime subscriptions
+Duplicate database requests
+Heavy animations
+Autoplay videos
+Memory leaks
+Unnecessary polling
+
+Use lazy loading, optimized images and pagination where appropriate.
+
+---
+
+# 29. FINAL EXPERIENCE
+
+The complete 29Bricks experience should feel like:
+
+“Property chahiye?”
+→ Search
+
+“Property deni hai?”
+→ Post Property
+
+“Property/room/shop chahiye but mil nahi raha?”
+→ Post Requirement
+
+“Service chahiye?”
+→ Services
+
+“Owner aur customer ko connect karna hai?”
+→ Admin Lead + Property Chat
+
+“Deal karwani hai?”
+→ Offer + Visit + Admin/Broker
+
+The central concept is:
+
+**29Bricks connects people who HAVE a property with people who NEED a property, while Admin/29Bricks controls the complete lead, communication, listing and commission process.**
+
+Do not remove any requested feature.
+
+Do not replace functional workflows with static mockups.
+
+Keep all important business controls configurable from the Admin Dashboard.
