@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Sparkles, Wrench, Megaphone, GraduationCap } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ListingCard, type ListingRow } from "@/components/listing-card";
@@ -37,7 +37,12 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-function greeting() {
+/**
+ * Time-of-day greeting. Client-only: rendering it during SSR embeds the
+ * server's clock (UTC) into the HTML, which then mismatches the browser's
+ * local time during hydration (React error #418).
+ */
+function timeGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
@@ -49,6 +54,10 @@ function Index() {
   const { city } = useCity();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [greeting, setGreeting] = useState("");
+  useEffect(() => {
+    setGreeting(timeGreeting());
+  }, []);
   const { data: settings } = useQuery(settingsQuery);
   const { data: categories } = useQuery(categoriesQuery);
   const { data: announcements } = useQuery(announcementsQuery);
@@ -63,7 +72,8 @@ function Index() {
     <AppShell>
       <div className="rounded-3xl gradient-brand p-5 text-primary-foreground shadow-glow">
         <p className="text-xs opacity-90">
-          {greeting()} 👋 · {city}
+          {greeting ? `${greeting} 👋 · ` : ""}
+          {city}
         </p>
         <h1 className="mt-1 font-display text-2xl font-bold leading-tight">
           Find your next home in {city}

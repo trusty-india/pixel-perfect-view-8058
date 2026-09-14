@@ -112,13 +112,17 @@ function ProfilePage() {
     setCity(accountInfo.data?.city ?? "");
   }, [accountInfo.data]);
 
-  const listings = useQuery(myListingsQuery(user?.id ?? ""));
-  const requirements = useQuery(myRequirementsQuery(user?.id ?? ""));
-  const services = useQuery(myServicesQuery(user?.id ?? ""));
-  const offers = useQuery(myOffersQuery(user?.id ?? ""));
-  const visits = useQuery(myVisitsQuery(user?.id ?? ""));
-  const contacts = useQuery(myContactsQuery(user?.id ?? ""));
-  const conversations = useQuery(myConversationsQuery(user?.id ?? ""));
+  // User-scoped queries are gated on the resolved Supabase session: they must
+  // never execute with an empty id (owner_id=eq. / user_id=eq. → HTTP 400) —
+  // not during SSR, and not while a Google OAuth callback is still resolving.
+  const uid = user?.id;
+  const listings = useQuery({ ...myListingsQuery(uid ?? ""), enabled: Boolean(uid) });
+  const requirements = useQuery({ ...myRequirementsQuery(uid ?? ""), enabled: Boolean(uid) });
+  const services = useQuery({ ...myServicesQuery(uid ?? ""), enabled: Boolean(uid) });
+  const offers = useQuery({ ...myOffersQuery(uid ?? ""), enabled: Boolean(uid) });
+  const visits = useQuery({ ...myVisitsQuery(uid ?? ""), enabled: Boolean(uid) });
+  const contacts = useQuery({ ...myContactsQuery(uid ?? ""), enabled: Boolean(uid) });
+  const conversations = useQuery({ ...myConversationsQuery(uid ?? ""), enabled: Boolean(uid) });
 
   async function onAvatar(file: File) {
     try {
@@ -178,8 +182,6 @@ function ProfilePage() {
       </AppShell>
     );
   }
-
-  const uid = user?.id ?? "";
 
   return (
     <AppShell>

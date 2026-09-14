@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,12 +118,23 @@ function AuthPage() {
           </Button>
         </form>
 
+        {/* Direct Supabase OAuth — the same architecture as email/password sign-in.
+            The /auth page's existing signed-in effect handles the return to /profile. */}
         <Button
           variant="outline"
           className="mt-3 w-full rounded-xl"
-          onClick={() =>
-            lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })
-          }
+          disabled={busy}
+          onClick={async () => {
+            try {
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: window.location.origin },
+              });
+              if (error) throw error;
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Could not start Google sign-in");
+            }
+          }}
         >
           Continue with Google
         </Button>
