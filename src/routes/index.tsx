@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Search,
-  Sparkles,
   Wrench,
   Megaphone,
   GraduationCap,
@@ -20,6 +19,7 @@ import {
   announcementsQuery,
   categoriesQuery,
   listingsQuery,
+  parseHeroConfig,
   requirementsQuery,
   servicesQuery,
   settingsQuery,
@@ -59,24 +59,10 @@ function withFallback(e: React.SyntheticEvent<HTMLImageElement>) {
   img.src = HERO_FALLBACK;
 }
 
-/**
- * Time-of-day greeting. Client-only: rendering it during SSR embeds the
- * server's clock (UTC) into the HTML, which then mismatches the browser's
- * local time during hydration (React error #418).
- */
-function timeGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning 🌞";
-  if (h < 17) return "Good afternoon 👋";
-  if (h < 21) return "Good evening 👋";
-  return "Good night 🌆";
-}
-
 type BannerRow = {
   id: string;
   title: string;
   message: string | null;
-  type?: string | null;
   image_url: string | null;
   button_text: string | null;
   button_url: string | null;
@@ -87,7 +73,8 @@ type BannerRow = {
   is_pinned: boolean;
 };
 
-function heroBanners(rows: BannerRow[] | undefined): BannerRow[] {
+/** Announcements currently inside their admin-configured window (promo strips). */
+function activeBanners(rows: BannerRow[] | undefined): BannerRow[] {
   if (!rows?.length) return [];
   const now = new Date();
   const hhmm = now.toTimeString().slice(0, 8);
@@ -97,7 +84,7 @@ function heroBanners(rows: BannerRow[] | undefined): BannerRow[] {
     if (r.start_time && r.end_time) return hhmm >= r.start_time && hhmm <= r.end_time;
     return true;
   });
-  // Pinned announcements lead the carousel; the rest follow in admin order.
+  // Pinned announcements lead; the rest follow in admin sort order.
   return [...inWindow].sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned));
 }
 
@@ -117,11 +104,6 @@ function Index() {
   const { city } = useCity();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const [greeting, setGreeting] = useState("");
-  const [slide, setSlide] = useState(0);
-  useEffect(() => {
-    setGreeting(timeGreeting());
-  }, []);
   const { data: settings } = useQuery(settingsQuery);
   const { data: categories } = useQuery(categoriesQuery);
   const { data: announcements } = useQuery(announcementsQuery);
@@ -133,17 +115,11 @@ function Index() {
   const { data: services } = useQuery(servicesQuery());
   const { data: requirements } = useQuery(requirementsQuery(6));
 
-  const banners = heroBanners(announcements as BannerRow[] | undefined);
-  const banner = banners[Math.min(slide, Math.max(banners.length - 1, 0))] ?? null;
+  // Home hero: fully admin-controlled (Business Profile & Settings → Home Hero).
+  // No automatic greeting or city text is ever rendered here.
+  const hero = parseHeroConfig(settings?.social_links);
 
-  // Gentle auto-advance for multi-banner carousels (lightweight; no library).
-  // Respects prefers-reduced-motion.
-  useEffect(() => {
-    if (banners.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setSlide((s) => (s + 1) % banners.length), 5000);
-    return () => clearInterval(t);
-  }, [banners.length]);
+  const banners = activeBanners(announcements as BannerRow[] | undefined);
 
   // Popular locations derived from the same live listings query (DB-driven).
   const popularLocations = useMemo(() => {
@@ -156,98 +132,48 @@ function Index() {
 
   return (
     <AppShell>
-      {/* Hero: admin-controlled announcement card first, image fallback second */}
-      {banner ? (
-        <div
-          key={banner.id}
-          className="rise-in relative overflow-hidden rounded-3xl shadow-card"
-          style={{ aspectRatio: "16 / 10" }}
-        >
-          {/* Image fills the full card; bundled fallback guarantees no blank area */}
+      {/* Home hero: admin-selected image (or clean built-in fallback) with
+          admin title, description and CTA. Nothing here is auto-generated. */}
+      <div
+        className="rise-in relative overflow-hidden rounded-3xl shadow-card"
+        style={{ aspectRatio: "16 / 10" }}
+      >
+        {hero.image_url ? (
           <img
-            src={banner.image_url || HERO_FALLBACK}
-            alt=""
-            aria-hidden
+            src={hero.image_url}
+            alt={hero.title || "Home hero"}
             onError={withFallback}
             className="hero-img-zoom absolute inset-0 size-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.2_0.05_26/0.94)] via-[oklch(0.28_0.07_26/0.55)] to-[oklch(0.35_0.1_264/0.25)]" />
-          <div className="relative flex size-full flex-col justify-end p-5 text-primary-foreground">
-            <p className="fade-up text-xs font-semibold tracking-wide opacity-95 [animation-delay:80ms]">
-              {greeting ? `${greeting} · ` : ""}
-              {city}
-            </p>
-            <h1 className="fade-up text-shadow-hero mt-1 font-display text-2xl font-bold leading-tight [animation-delay:160ms]">
-              {banner.title}
-            </h1>
-            {banner.message ? (
-              <p className="fade-up text-shadow-hero mt-1 line-clamp-2 text-sm opacity-95 [animation-delay:240ms]">
-                {banner.message}
-              </p>
-            ) : null}
-            {banner.button_text ? (
-              <a
-                href={banner.button_url || "/search"}
-                className="fade-up mt-3 inline-flex w-fit items-center gap-1 rounded-full gradient-wine px-4 py-2 text-xs font-bold text-white shadow-wine-glow tap-scale [animation-delay:320ms]"
-              >
-                {banner.button_text}
-                <ArrowRight className="size-3.5" />
-              </a>
-            ) : null}
-          </div>
-          {banners.length > 1 ? (
-            <div className="absolute right-4 top-4 flex gap-1.5">
-              {banners.map((b, i) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  aria-label={`Announcement ${i + 1}`}
-                  onClick={() => setSlide(i)}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === slide ? "w-5 bg-primary-foreground" : "w-1.5 bg-primary-foreground/50"
-                  }`}
-                />
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : (
-        <div
-          className="rise-in relative overflow-hidden rounded-3xl shadow-card"
-          style={{ aspectRatio: "16 / 10" }}
-        >
+        ) : (
           <img
             src={HERO_FALLBACK}
             alt=""
             aria-hidden
             className="hero-img-zoom absolute inset-0 size-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.2_0.05_26/0.94)] via-[oklch(0.28_0.07_26/0.55)] to-[oklch(0.35_0.1_264/0.25)]" />
-          <Sparkles className="float-soft absolute right-4 top-4 size-6 text-primary-foreground/60" />
-          <div className="relative flex size-full flex-col justify-end p-5 text-primary-foreground">
-            <p className="fade-up text-xs font-semibold tracking-wide opacity-95 [animation-delay:80ms]">
-              {greeting ? `${greeting} · ` : ""}
-              {city}
-            </p>
-            <h1 className="fade-up text-shadow-hero mt-1 font-display text-2xl font-bold leading-tight [animation-delay:160ms]">
-              Find your perfect home
-              <br />
-              with 29Bricks
-            </h1>
-            <p className="fade-up text-shadow-hero mt-1 line-clamp-2 text-xs opacity-95 [animation-delay:240ms]">
-              {settings?.description ??
-                "Property, rooms, shops, land and trusted local services."}
-            </p>
-            <Link
-              to="/search"
-              className="fade-up mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-primary-foreground px-4 py-2 text-xs font-bold text-primary shadow-glow tap-scale [animation-delay:320ms]"
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.2_0.05_26/0.94)] via-[oklch(0.28_0.07_26/0.55)] to-[oklch(0.35_0.1_264/0.25)]" />
+        <div className="relative flex size-full flex-col justify-end p-5 text-primary-foreground">
+          <h1 className="fade-up text-shadow-hero font-display text-2xl font-bold leading-tight [animation-delay:80ms]">
+            {hero.title.trim() || settings?.business_name || "29Bricks"}
+          </h1>
+          <p className="fade-up text-shadow-hero mt-1 line-clamp-2 text-sm opacity-95 [animation-delay:160ms]">
+            {hero.description.trim() ||
+              settings?.description ||
+              "Property, rooms, shops, land and trusted local services."}
+          </p>
+          {hero.cta_text.trim() ? (
+            <a
+              href={hero.cta_url.trim() || "/search"}
+              className="fade-up mt-3 inline-flex w-fit items-center gap-1 rounded-full gradient-wine px-4 py-2 text-xs font-bold text-white shadow-wine-glow tap-scale [animation-delay:240ms]"
             >
-              Explore Now
+              {hero.cta_text}
               <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
+            </a>
+          ) : null}
         </div>
-      )}
+      </div>
 
       {/* Search bar */}
       <form

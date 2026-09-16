@@ -2,17 +2,24 @@ import { useRef, useState } from "react";
 import { Building2, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadImage } from "@/lib/upload";
+import { cn } from "@/lib/utils";
 
 export function ImageUploadField({
   label,
   url,
   onUploaded,
   onRemove,
+  folder = "admin",
+  previewClassName,
 }: {
   label: string;
   url: string | null;
   onUploaded: (url: string) => void;
   onRemove?: () => void;
+  /** Storage subfolder inside the existing public-media bucket (default "admin"). */
+  folder?: string;
+  /** Optional override for the preview box size (e.g. wide hero preview). */
+  previewClassName?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -21,7 +28,7 @@ export function ImageUploadField({
     if (!file) return;
     setBusy(true);
     try {
-      const uploaded = await uploadImage(file, "admin");
+      const uploaded = await uploadImage(file, folder);
       onUploaded(uploaded);
     } catch (error) {
       // error reporting handled by caller via toasts in most flows; surface here too
@@ -34,8 +41,13 @@ export function ImageUploadField({
   return (
     <div className="rounded-2xl border bg-background p-3">
       <p className="text-xs font-semibold">{label}</p>
-      <div className="mt-3 flex items-center gap-3">
-        <div className="grid size-16 place-items-center overflow-hidden rounded-2xl bg-muted text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div
+          className={cn(
+            "grid place-items-center overflow-hidden rounded-2xl bg-muted text-muted-foreground",
+            previewClassName ?? "size-16",
+          )}
+        >
           {url ? (
             <img src={url} alt={label} className="size-full object-cover" />
           ) : (
@@ -62,7 +74,7 @@ export function ImageUploadField({
             onClick={() => inputRef.current?.click()}
           >
             {busy ? <Loader2 className="mr-1 size-3.5 animate-spin" /> : <Upload className="mr-1 size-3.5" />}
-            Upload
+            {url ? "Change Image" : "Upload Image"}
           </Button>
           {url && onRemove ? (
             <Button type="button" size="sm" variant="ghost" className="rounded-lg text-destructive" onClick={onRemove}>

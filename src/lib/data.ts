@@ -151,6 +151,47 @@ export function servicesQuery(type?: string) {
   });
 }
 
+/* ---------- Home Hero (admin-controlled) ---------- */
+
+export type HeroConfig = {
+  image_url: string | null;
+  title: string;
+  description: string;
+  cta_text: string;
+  cta_url: string;
+};
+
+/**
+ * Reserved key inside the existing site_settings.social_links JSON column that
+ * stores the Home Hero configuration. Uses the existing settings architecture —
+ * no new table or migration. Social-link UIs must skip "__"-prefixed keys.
+ */
+export const HERO_CONFIG_KEY = "__hero";
+
+export function parseHeroConfig(
+  raw: Record<string, string> | null | undefined,
+): HeroConfig {
+  const stored = raw?.[HERO_CONFIG_KEY];
+  if (!stored) {
+    return { image_url: null, title: "", description: "", cta_text: "", cta_url: "" };
+  }
+  try {
+    const parsed = JSON.parse(stored) as Partial<HeroConfig>;
+    return {
+      image_url:
+        typeof parsed.image_url === "string" && parsed.image_url.trim()
+          ? parsed.image_url
+          : null,
+      title: typeof parsed.title === "string" ? parsed.title : "",
+      description: typeof parsed.description === "string" ? parsed.description : "",
+      cta_text: typeof parsed.cta_text === "string" ? parsed.cta_text : "",
+      cta_url: typeof parsed.cta_url === "string" ? parsed.cta_url : "",
+    };
+  } catch {
+    return { image_url: null, title: "", description: "", cta_text: "", cta_url: "" };
+  }
+}
+
 type AnnouncementWindow = {
   start_time: string | null;
   end_time: string | null;
