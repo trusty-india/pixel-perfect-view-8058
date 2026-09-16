@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2B4A8F"/>
+      <stop offset="0.55" stop-color="#3B63C9"/>
+      <stop offset="1" stop-color="#7FA3E8"/>
+    </linearGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F3A73"/>
+      <stop offset="1" stop-color="#2B4A8F"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#152A56"/>
+      <stop offset="1" stop-color="#1F3A73"/>
+    </linearGradient>
+    <linearGradient id="wineGlow" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#641E16" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#641E16" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <circle cx="920" cy="150" r="70" fill="#FDF6E3" opacity="0.9"/>
+  <g fill="url(#back)">
+    <rect x="40" y="300" width="90" height="375"/>
+    <rect x="150" y="240" width="70" height="435"/>
+    <rect x="240" y="330" width="100" height="345"/>
+    <rect x="360" y="200" width="80" height="475"/>
+    <rect x="460" y="290" width="90" height="385"/>
+    <rect x="570" y="230" width="75" height="445"/>
+    <rect x="660" y="310" width="110" height="365"/>
+    <rect x="790" y="260" width="80" height="415"/>
+    <rect x="890" y="200" width="95" height="475"/>
+    <rect x="1005" y="290" width="75" height="385"/>
+    <rect x="1100" y="250" width="60" height="425"/>
+  </g>
+  <g fill="url(#front)">
+    <rect x="0" y="420" width="140" height="255"/>
+    <rect x="160" y="360" width="110" height="315"/>
+    <rect x="290" y="450" width="150" height="225"/>
+    <rect x="460" y="380" width="120" height="295"/>
+    <rect x="600" y="440" width="160" height="235"/>
+    <rect x="780" y="370" width="110" height="305"/>
+    <rect id="win" x="910" y="420" width="140" height="255"/>
+    <rect x="1070" y="400" width="130" height="275"/>
+  </g>
+  <g fill="#FDF6E3" opacity="0.28">
+    <rect x="60" y="330" width="10" height="10"/><rect x="85" y="330" width="10" height="10"/>
+    <rect x="60" y="355" width="10" height="10"/><rect x="85" y="360" width="10" height="10"/>
+    <rect x="170" y="270" width="10" height="10"/><rect x="195" y="270" width="10" height="10"/>
+    <rect x="170" y="300" width="10" height="10"/><rect x="195" y="305" width="10" height="10"/>
+    <rect x="380" y="230" width="10" height="10"/><rect x="405" y="230" width="10" height="10"/>
+    <rect x="380" y="260" width="10" height="10"/><rect x="405" y="265" width="10" height="10"/>
+    <rect x="590" y="260" width="10" height="10"/><rect x="615" y="260" width="10" height="10"/>
+    <rect x="590" y="290" width="10" height="10"/><rect x="615" y="295" width="10" height="10"/>
+    <rect x="910" y="230" width="10" height="10"/><rect x="940" y="230" width="10" height="10"/>
+    <rect x="910" y="260" width="10" height="10"/><rect x="940" y="265" width="10" height="10"/>
+    <rect x="1120" y="280" width="10" height="10"/><rect x="1145" y="280" width="10" height="10"/>
+  </g>
+  <rect width="1200" height="675" fill="url(#wineGlow)"/>
+</svg>

@@ -18,6 +18,7 @@ import { settingsQuery, citiesQuery } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
 import { useCity } from "@/lib/city";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/user-avatar";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: settings } = useQuery(settingsQuery);
   const { data: cities } = useQuery(citiesQuery);
   const { city, setCity } = useCity();
-  const { isAdmin, user } = useAuth();
+  // Existing auth state: profile is loaded by AuthProvider (guarded — no
+  // empty-uid queries). Display DP, full name and mobile when signed in.
+  const { isAdmin, user, profile } = useAuth();
+  const uid = user?.id;
+  const signedIn = Boolean(uid);
   const [postOpen, setPostOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -47,36 +52,44 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/profile", label: "Profile", icon: UserIcon },
   ] as const;
 
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "";
+  const displayMobile = profile?.phone ?? "";
+
   return (
     <div className="min-h-screen bg-background pb-28">
       <header className="sticky top-0 z-40 glass-panel border-b">
-        <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3">
-          <Link to="/" className="flex items-center gap-2.5">
+        <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2.5">
+          <Link to="/" className="flex min-w-0 items-center gap-2.5">
             {settings?.logo_url ? (
               <img
                 src={settings.logo_url}
                 alt={`${settings.business_name} logo`}
-                className="size-10 rounded-xl object-cover shadow-soft"
+                className="size-10 shrink-0 rounded-xl object-cover shadow-soft"
               />
             ) : (
-              <span className="grid size-10 place-items-center rounded-xl gradient-brand text-primary-foreground shadow-soft">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl gradient-brand text-primary-foreground shadow-soft">
                 <Building2 className="size-5" />
               </span>
             )}
-            <span className="leading-tight">
-              <span className="block font-display text-lg font-bold tracking-tight">
+            <span className="min-w-0 leading-tight">
+              <span className="block truncate font-display text-base font-bold tracking-tight">
                 {settings?.business_name ?? "29Bricks"}
               </span>
-              <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                Powered by {settings?.powered_by ?? "Sarkar Properties"}
+              <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                <MapPin className="size-2.5 shrink-0 text-wine" />
+                <span className="truncate">{city}</span>
+                <span aria-hidden>·</span>
+                <span className="truncate">
+                  Powered by {settings?.powered_by ?? "Sarkar Properties"}
+                </span>
               </span>
             </span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <Select value={city} onValueChange={setCity}>
               <SelectTrigger className="h-9 w-auto gap-1 rounded-full border-border bg-card px-3 text-xs font-semibold shadow-soft">
-                <MapPin className="size-3.5 text-brand" />
+                <MapPin className="size-3.5 text-wine" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -91,25 +104,41 @@ export function AppShell({ children }: { children: ReactNode }) {
             {isAdmin ? (
               <a
                 href="/admin"
-                className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary tap-scale"
+                className="grid size-9 place-items-center rounded-full bg-wine-soft text-wine-deep tap-scale"
                 aria-label="Admin panel"
               >
                 <ShieldCheck className="size-4" />
               </a>
             ) : null}
-            <Link
-              to="/profile"
-              className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary tap-scale"
-              aria-label="Your profile"
-            >
-              {user && "email" in user && user.email ? (
-                <span className="grid size-full place-items-center text-xs font-bold">
-                  {user.email.charAt(0).toUpperCase()}
+            {signedIn ? (
+              <Link
+                to="/profile"
+                className="flex min-w-0 items-center gap-2 rounded-full border border-border/70 bg-card py-1 pl-1 pr-2.5 shadow-soft tap-scale"
+                aria-label="Your profile"
+              >
+                <UserAvatar
+                  src={profile?.avatar_url}
+                  name={displayName}
+                  className="size-8 border-0"
+                />
+                <span className="hidden min-w-0 leading-tight sm:block">
+                  <span className="block max-w-[9rem] truncate text-xs font-bold">
+                    {displayName || "Profile"}
+                  </span>
+                  <span className="block max-w-[9rem] truncate text-[10px] text-muted-foreground">
+                    {displayMobile || user?.email || ""}
+                  </span>
                 </span>
-              ) : (
+              </Link>
+            ) : (
+              <Link
+                to="/auth"
+                className="flex h-9 items-center gap-1.5 rounded-full gradient-wine px-3.5 text-xs font-bold text-white shadow-soft tap-scale"
+              >
                 <UserIcon className="size-4" />
-              )}
-            </Link>
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -125,7 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => setPostOpen(true)}
-              className="mx-auto -mt-8 grid size-16 place-items-center rounded-full gradient-red text-brand-foreground shadow-glow ring-4 ring-card tap-scale"
+              className="mx-auto -mt-8 grid size-16 place-items-center rounded-full gradient-wine text-white shadow-wine-glow ring-4 ring-card tap-scale"
               aria-label="Post something"
             >
               <Plus className="size-8" strokeWidth={2.5} />
@@ -188,10 +217,17 @@ function NavTab({
       to={to}
       className={cn(
         "flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold transition-colors",
-        active ? "text-brand" : "text-muted-foreground",
+        active ? "text-wine-deep" : "text-muted-foreground",
       )}
     >
-      <Icon className={cn("size-5 transition-transform", active && "scale-110")} />
+      <span
+        className={cn(
+          "grid size-8 place-items-center rounded-full transition-all duration-200",
+          active ? "bg-wine-soft" : "bg-transparent",
+        )}
+      >
+        <Icon className={cn("size-5 transition-transform duration-200", active && "scale-110")} />
+      </span>
       {label}
     </Link>
   );

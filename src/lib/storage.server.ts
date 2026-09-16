@@ -161,8 +161,9 @@ export async function ensureStorageBuckets(
     for (const bucket of [PROFILE_BUCKET, PROPERTY_BUCKET]) {
       const { error } = await admin.storage.createBucket(bucket.id, {
         public: bucket.public,
-        file_size_limit: bucket.file_size_limit,
-        allowed_mime_types: [...bucket.allowed_mime_types],
+        // camelCase keys — the SDK maps them to the same API payload.
+        fileSizeLimit: bucket.file_size_limit,
+        allowedMimeTypes: [...bucket.allowed_mime_types],
       });
       if (!error) {
         buckets.push(bucket.id);

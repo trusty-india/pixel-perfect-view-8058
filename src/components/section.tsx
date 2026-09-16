@@ -6,21 +6,25 @@ export function Section({
   title,
   action,
   actionTo,
+  actionSearch,
   children,
 }: {
   title: string;
   action?: string;
   actionTo?: string;
+  /** Optional typed search params for the action link (e.g. { type: "Room" }). */
+  actionSearch?: Record<string, string | undefined>;
   children: ReactNode;
 }) {
   return (
     <section className="mt-6">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-bold">{title}</h2>
+        <h2 className="font-display text-base font-bold">{title}</h2>
         {action && actionTo ? (
           <Link
             to={actionTo}
-            className="flex items-center text-xs font-semibold text-primary tap-scale"
+            {...(actionSearch ? { search: actionSearch } : {})}
+            className="flex items-center gap-0.5 rounded-full bg-wine-soft px-3 py-1.5 text-xs font-semibold text-wine-deep tap-scale"
           >
             {action}
             <ChevronRight className="size-4" />

@@ -98,7 +98,7 @@ function SearchPage() {
           type="button"
           variant="outline"
           size="icon"
-          className={cn("size-11 shrink-0 rounded-2xl shadow-soft", showFilters && "border-brand/60 text-brand")}
+          className={cn("size-11 shrink-0 rounded-2xl shadow-soft", showFilters && "border-wine/60 text-wine-deep")}
           aria-label="Toggle filters"
           aria-expanded={showFilters}
           onClick={() => setShowFilters((v) => !v)}
@@ -121,7 +121,7 @@ function SearchPage() {
             className={cn(
               "rounded-full border px-4 py-1.5 text-xs font-semibold capitalize tap-scale",
               (params.purpose ?? "all") === p
-                ? "gradient-red border-transparent text-brand-foreground shadow-soft"
+                ? "gradient-wine border-transparent text-white shadow-soft"
                 : "bg-card",
             )}
           >
@@ -194,7 +194,7 @@ function SearchPage() {
               setMaxPrice("");
               void navigate({ search: (prev: SearchParams) => ({ ...prev, type: undefined }) });
             }}
-            className="col-span-full flex items-center justify-center gap-1 text-xs font-semibold text-brand"
+            className="col-span-full flex items-center justify-center gap-1 text-xs font-semibold text-wine-deep"
           >
             <X className="size-3.5" /> Clear filters
           </button>

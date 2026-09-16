@@ -3,6 +3,18 @@ import { BedDouble, ImageIcon, MapPin, Ruler, Star } from "lucide-react";
 import { priceLabel, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+/** Bundled fallback so a missing/failed cover never shows a broken image. */
+const COVER_FALLBACK = "/hero-fallback.svg";
+
+function coverFallbackHandler() {
+  return (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (img.dataset["fallback"]) return;
+    img.dataset["fallback"] = "1";
+    img.src = COVER_FALLBACK;
+  };
+}
+
 export type ListingRow = {
   id: string;
   title: string;
@@ -20,6 +32,7 @@ export type ListingRow = {
 
 export function ListingCard({ listing, compact }: { listing: ListingRow; compact?: boolean }) {
   const cover = listing.images?.[0];
+  const handleImgError = coverFallbackHandler();
   return (
     <Link
       to="/listing/$id"
@@ -35,11 +48,17 @@ export function ListingCard({ listing, compact }: { listing: ListingRow; compact
             src={cover}
             alt={listing.title}
             loading="lazy"
+            onError={handleImgError}
             className="size-full object-cover transition-transform duration-500 hover:scale-105"
           />
         ) : (
-          <span className="grid size-full place-items-center text-muted-foreground">
-            <ImageIcon className="size-8" />
+          <span className="grid size-full place-items-center bg-muted">
+            <img
+              src={COVER_FALLBACK}
+              alt=""
+              aria-hidden
+              className="size-full object-cover opacity-90"
+            />
           </span>
         )}
         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/45 to-transparent" />
@@ -53,7 +72,7 @@ export function ListingCard({ listing, compact }: { listing: ListingRow; compact
             For {listing.purpose === "rent" ? "Rent" : "Sale"}
           </span>
           {listing.is_featured ? (
-            <span className="flex items-center gap-0.5 rounded-full gradient-red px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-foreground shadow-soft">
+            <span className="flex items-center gap-0.5 rounded-full gradient-wine px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-soft">
               <Star className="size-3 fill-current" /> Featured
             </span>
           ) : null}
@@ -68,7 +87,7 @@ export function ListingCard({ listing, compact }: { listing: ListingRow; compact
       <div className="space-y-1.5 p-3">
         <p className="line-clamp-1 text-sm font-semibold">{listing.title}</p>
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <MapPin className="size-3.5 shrink-0 text-brand" />
+          <MapPin className="size-3.5 shrink-0 text-wine" />
           <span className="line-clamp-1">
             {listing.location}, {listing.city}
           </span>
