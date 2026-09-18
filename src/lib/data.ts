@@ -192,6 +192,38 @@ export function parseHeroConfig(
   }
 }
 
+/* ---------- Category card images (admin-controlled, Home page) ---------- */
+
+/**
+ * Reserved key inside the existing site_settings.social_links JSON column that
+ * stores Home category-card image overrides (slug → uploaded image URL).
+ * Same pattern as "__hero": flexible settings JSON, no new table/migration.
+ * Admin-managed in Business Profile & Settings → Category images.
+ */
+export const CATEGORY_IMAGES_KEY = "__category_images";
+
+/**
+ * Parse the stored category image overrides. Invalid entries are skipped, so
+ * a corrupt value can never break the Home page — cards fall back to their
+ * bundled artwork instead.
+ */
+export function parseCategoryImages(
+  raw: Record<string, string> | null | undefined,
+): Record<string, string> {
+  const stored = raw?.[CATEGORY_IMAGES_KEY];
+  if (!stored) return {};
+  try {
+    const parsed = JSON.parse(stored) as Record<string, unknown>;
+    const out: Record<string, string> = {};
+    for (const [slug, url] of Object.entries(parsed)) {
+      if (typeof url === "string" && url.trim()) out[slug] = url.trim();
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 type AnnouncementWindow = {
   start_time: string | null;
   end_time: string | null;

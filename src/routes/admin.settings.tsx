@@ -11,13 +11,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import {
   announcementsQuery,
+  categoriesQuery,
+  CATEGORY_IMAGES_KEY,
   HERO_CONFIG_KEY,
+  parseCategoryImages,
   parseHeroConfig,
   settingsQuery,
   type HeroConfig,
   type SiteSettings,
 } from "@/lib/data";
 import { useSiteSettingsMutation } from "@/lib/admin-mutations";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({ meta: [{ title: "Business profile — 29Bricks" }] }),
@@ -79,10 +83,15 @@ function AdminSettings() {
   });
   const [heroBusy, setHeroBusy] = useState(false);
   const [savingSocial, setSavingSocial] = useState(false);
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [categoryImagesBusy, setCategoryImagesBusy] = useState(false);
 
   // Announcement images the admin can reuse as the hero background (existing
   // announcement data — no duplicate image upload required).
   const { data: announcements } = useQuery(announcementsQuery);
+  // Live category list (same DB-driven source the Home page uses) so every
+  // active category gets an image upload block, including admin-added ones.
+  const { data: categories } = useQuery(categoriesQuery);
   const announcementChoices = useMemo(() => {
     return (announcements ?? [])
       .filter((a) => a.image_url)
@@ -94,6 +103,7 @@ function AdminSettings() {
     setForm(toForm(settings));
     setSocialLinks(parseSocialLinks(settings.social_links));
     setHero(parseHeroConfig(settings.social_links));
+    setCategoryImages(parseCategoryImages(settings.social_links));
   }, [settings, form]);
 
   if (isLoading || !form) {
@@ -120,23 +130,51 @@ function AdminSettings() {
   const update = (key: keyof SettingsForm, value: string | null) =>
     setForm((current) => (current ? { ...current, [key]: value } : current));
 
+  /**
+   * Shared writer for the flexible social_links JSON: merges the given
+   * category-image overrides with the current local social links + hero state
+   * (all hydrated from the server on load) so every save path preserves the
+   * reserved keys it doesn't own. No schema change — same JSON column.
+   */
+  async function writeSocialLinks(categoryImageOverrides: Record<string, string>) {
+    const links: Record<string, string> = {};
+    for (const link of socialLinks) {
+      if (link.label.trim() && link.url.trim()) {
+        links[link.label.trim()] = link.url.trim();
+      }
+    }
+    links[HERO_CONFIG_KEY] = JSON.stringify(hero);
+    // Always write the category-images key: local state is hydrated from the
+    // server before any save button renders, so an empty map here means the
+    // admin deliberately removed every image — the key must be cleared too.
+    links[CATEGORY_IMAGES_KEY] = JSON.stringify(categoryImageOverrides);
+    const { error: saveError } = await supabase
+      .from("site_settings")
+      .update({ social_links: links })
+      .eq("id", true);
+    if (saveError) throw saveError;
+  }
+
+  async function saveCategoryImages() {
+    setCategoryImagesBusy(true);
+    try {
+      await writeSocialLinks(categoryImages);
+      void queryClient.invalidateQueries({ queryKey: ["site-settings"] });
+      toast.success("Category images saved");
+    } catch (saveError) {
+      toast.error(saveError instanceof Error ? saveError.message : "Could not save category images");
+    } finally {
+      setCategoryImagesBusy(false);
+    }
+  }
+
   async function saveHero() {
     setHeroBusy(true);
     try {
       // Persist inside the existing social_links JSON (reserved "__hero" key)
-      // so no schema change is needed. Other keys are left untouched.
-      const nextLinks: Record<string, string> = {};
-      for (const link of socialLinks) {
-        if (link.label.trim() && link.url.trim()) {
-          nextLinks[link.label.trim()] = link.url.trim();
-        }
-      }
-      nextLinks[HERO_CONFIG_KEY] = JSON.stringify(hero);
-      const { error: saveError } = await supabase
-        .from("site_settings")
-        .update({ social_links: nextLinks })
-        .eq("id", true);
-      if (saveError) throw saveError;
+      // so no schema change is needed. Category images and social links are
+      // preserved via the shared writer.
+      await writeSocialLinks(categoryImages);
       void queryClient.invalidateQueries({ queryKey: ["site-settings"] });
     } catch (saveError) {
       window.alert(saveError instanceof Error ? saveError.message : "Could not save hero");
@@ -165,21 +203,9 @@ function AdminSettings() {
   async function saveSocialLinks() {
     setSavingSocial(true);
     try {
-      const links: Record<string, string> = {};
-      for (const link of socialLinks) {
-        if (link.label.trim() && link.url.trim()) {
-          links[link.label.trim()] = link.url.trim();
-        }
-      }
-      // Preserve the reserved hero config key when saving social links.
-      links[HERO_CONFIG_KEY] = JSON.stringify(hero);
-      const { error: saveError } = await supabase
-        .from("site_settings")
-        .update({ social_links: links })
-        .eq("id", true);
-      if (saveError) throw saveError;
+      // Category images + hero preserved via the shared writer.
+      await writeSocialLinks(categoryImages);
     } catch (saveError) {
-      // fall through to finally; mutation-free save so surface via alert below
       window.alert(saveError instanceof Error ? saveError.message : "Could not save social links");
     } finally {
       setSavingSocial(false);
@@ -328,6 +354,51 @@ function AdminSettings() {
               {hero.image_url ? "Add a title to complete the hero" : "No image set — clean built-in fallback shows"}
             </span>
           )}
+        </div>
+      </section>
+
+      <section className="rounded-3xl border bg-card p-4 shadow-soft">
+        <h2 className="text-sm font-bold">Category images</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Per-category card artwork shown on the Home “Explore by Category” carousel. Cards keep a fixed size and crop any upload with object-cover; without an upload each category uses its bundled artwork.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {(categories ?? []).map((category) => (
+            <ImageUploadField
+              key={category.id}
+              label={category.name}
+              url={categoryImages[category.slug] ?? null}
+              folder={`category-images/${category.slug}`}
+              previewClassName="h-24 w-20"
+              onUploaded={(url) =>
+                setCategoryImages((current) => ({ ...current, [category.slug]: url }))
+              }
+              onRemove={() =>
+                setCategoryImages((current) => {
+                  const next = { ...current };
+                  delete next[category.slug];
+                  return next;
+                })
+              }
+            />
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            className="rounded-xl"
+            disabled={categoryImagesBusy || !(categories ?? []).length}
+            onClick={() => void saveCategoryImages()}
+          >
+            {categoryImagesBusy ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 size-4" />
+            )}
+            Save category images
+          </Button>
+          <span className="text-[11px] text-muted-foreground">
+            Uploads save to storage immediately; press “Save category images” to apply them on Home.
+          </span>
         </div>
       </section>
 

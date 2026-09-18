@@ -20,6 +20,7 @@ import {
   announcementsQuery,
   categoriesQuery,
   listingsQuery,
+  parseCategoryImages,
   parseHeroConfig,
   requirementsQuery,
   servicesQuery,
@@ -100,14 +101,22 @@ const PAGE_IN_BACK = "page-in-back";
 function Index() {
   const { city } = useCity();
   const navigate = useNavigate();
-  // Sliding page transition state. A "page-out-*" class while a category tap
-  // slides the home content out; "page-in-back" on first render after a
-  // browser-back from the search page. Read via peek (hasPageTransition), not
-  // consume, in the initial state so the class exists from the very first
-  // painted frame and survives React StrictMode double-invoked initializers.
-  const [slideClass, setSlideClass] = useState<
-    null | typeof PAGE_OUT_FORWARD | typeof PAGE_IN_BACK
-  >(() => (hasPageTransition("back") ? PAGE_IN_BACK : null));
+  // Sliding page transitions, split into two independent states:
+  //
+  // • enterClass — the cosmetic "page-in-back" slide when the user returns
+  //   here from the search page. Read via peek (hasPageTransition), not
+  //   consume, in the initial state so the class exists from the very first
+  //   painted frame (StrictMode-safe). It is VISUAL ONLY and must never gate
+  //   click handlers — it used to share state with the exit guard, which kept
+  //   it set forever after returning Home and made every category card dead.
+  //
+  // • slideOut — the "page-out-forward" exit while a category tap slides the
+  //   home content away before navigating. Only this guards openCategory, so
+  //   cards stay tappable on every fresh mount.
+  const [enterClass] = useState<null | typeof PAGE_IN_BACK>(() =>
+    hasPageTransition("back") ? PAGE_IN_BACK : null,
+  );
+  const [slideOut, setSlideOut] = useState<null | typeof PAGE_OUT_FORWARD>(null);
   const [q, setQ] = useState("");
   const { data: settings } = useQuery(settingsQuery);
   const { data: categories } = useQuery(categoriesQuery);
@@ -126,26 +135,28 @@ function Index() {
 
   // Category tap → let the section play its scale transition, slide the home
   // page out, then open the existing category page. Plain timeouts (not CSS
-  // events) so repeated taps and reduced-motion stay predictable.
+  // events) so repeated taps and reduced-motion stay predictable. Guarded only
+  // by slideOut — never by the cosmetic enter animation — so cards remain
+  // clickable every time the user returns Home.
   const openCategory = useCallback(
     (slug: string) => {
-      if (slideClass) return; // transition already running
-      setSlideClass(PAGE_OUT_FORWARD);
+      if (slideOut) return; // exit transition already running
+      setSlideOut(PAGE_OUT_FORWARD);
       window.setTimeout(() => {
         armPageTransition("forward");
         void navigate({ to: "/search", search: { category: slug } });
       }, 260);
     },
-    [navigate, slideClass],
+    [navigate, slideOut],
   );
 
-  // Clear stale transition flags once the enter animation has finished, so a
-  // later plain navigation (e.g. bottom-nav "Home") doesn't replay it.
+  // Clear stale transition flags shortly after the enter animation finishes,
+  // so a later plain navigation (e.g. bottom-nav "Home") doesn't replay it.
   useEffect(() => {
-    if (!slideClass) return;
+    if (!enterClass) return;
     const t = window.setTimeout(clearPageTransition, 500);
     return () => window.clearTimeout(t);
-  }, [slideClass]);
+  }, [enterClass]);
 
   const banners = activeBanners(announcements as BannerRow[] | undefined);
 
@@ -160,7 +171,7 @@ function Index() {
 
   return (
     <AppShell>
-      <div className={slideClass ?? undefined}>
+      <div className={cn(enterClass, slideOut)}>
       {/* Home hero: admin-selected image (or clean built-in fallback) with
           admin title, description and CTA. Nothing here is auto-generated. */}
       <div
@@ -229,6 +240,7 @@ function Index() {
 
       <CategoryExplorer
         categories={categories as CategoryRow[] | undefined}
+        images={parseCategoryImages(settings?.social_links)}
         onSelect={openCategory}
       />
 

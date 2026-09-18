@@ -165,9 +165,12 @@ function categoryTheme(name: string, index: number): CategoryTheme {
  */
 export function CategoryExplorer({
   categories,
+  images,
   onSelect,
 }: {
   categories: CategoryRow[] | undefined;
+  /** Admin-uploaded image overrides keyed by category slug (from site settings). */
+  images?: Record<string, string> | undefined;
   onSelect: (slug: string) => void;
 }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -220,7 +223,12 @@ export function CategoryExplorer({
           <div className="-ml-3 flex">
             {categories.map((c, i) => (
               <div key={c.id} className="cat-slide min-w-0 shrink-0 grow-0 pl-3">
-                <CategoryCard category={c} index={i} onSelect={onSelect} />
+                <CategoryCard
+                  category={c}
+                  index={i}
+                  adminImage={images?.[c.slug]}
+                  onSelect={onSelect}
+                />
               </div>
             ))}
           </div>
@@ -274,15 +282,23 @@ export function CategoryExplorer({
 function CategoryCard({
   category,
   index,
+  adminImage,
   onSelect,
 }: {
   category: CategoryRow;
   index: number;
+  adminImage?: string | undefined;
   onSelect: (slug: string) => void;
 }) {
   const Icon = categoryIcon(category.icon);
   const theme = categoryTheme(category.name, index);
   const blurb = theme.tagline || category.subtitle || "Explore now";
+  // Admin upload first; bundled artwork second; gradient-only card last.
+  // A failed admin image swaps to the bundled artwork exactly once (never loops,
+  // never shows a broken-image icon). Reset when the admin picks a new image.
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [adminImage]);
+  const effectiveImage = adminImage && !broken ? adminImage : theme.image;
 
   return (
     <button
@@ -294,14 +310,17 @@ function CategoryCard({
         theme.cardBg,
       )}
     >
-      {/* Bundled artwork covers the full card (object-cover, mobile-first crop) */}
-      {theme.image ? (
+      {/* Admin image (priority) or bundled artwork, object-cover full-bleed.
+          The card's fixed aspect ratio controls size — an uploaded image can
+          never change card dimensions, only be cropped to fill them. */}
+      {effectiveImage ? (
         <img
-          src={theme.image}
+          src={effectiveImage}
           alt=""
           aria-hidden
           loading={index < 4 ? "eager" : "lazy"}
           decoding="async"
+          onError={() => setBroken(true)}
           className="absolute inset-0 size-full object-cover"
         />
       ) : null}
