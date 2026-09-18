@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CategoryExplorer, type CategoryRow } from "@/components/category-carousel";
+import { ParcelServices } from "@/components/parcel-services";
 import { ListingCard, type ListingRow } from "@/components/listing-card";
 import { EmptyState, HScroll, Section } from "@/components/section";
 import { Input } from "@/components/ui/input";
@@ -89,7 +90,6 @@ function Index() {
   const [q, setQ] = useState("");
   const { data: settings } = useQuery(settingsQuery);
   const { data: categories } = useQuery(categoriesQuery);
-  const { data: featured } = useQuery(listingsQuery({ city, featured: true, limit: 10 }));
   const { data: latest } = useQuery(listingsQuery({ city, limit: 12 }));
   const { data: rooms } = useQuery(listingsQuery({ city, propertyType: "Room", limit: 10 }));
   const { data: studentPicks } = useQuery(listingsQuery({ city, audience: "student", limit: 10 }));
@@ -223,17 +223,10 @@ function Index() {
         <QuickLink to="/student" icon={<GraduationCap className="size-4" />} label="Student Zone" />
       </div>
 
-      <Section title="🔥 Featured properties" action="View all" actionTo="/search">
-        {featured?.length ? (
-          <HScroll>
-            {(featured as ListingRow[]).map((l) => (
-              <ListingCard key={l.id} listing={l} compact />
-            ))}
-          </HScroll>
-        ) : (
-          <EmptyState text="No featured properties in this city yet." />
-        )}
-      </Section>
+      {/* Parcel Services — Lucknow → Lucknow local courier (replaces the
+          Featured properties strip's slot; the featured listings themselves
+          remain visible via /search and admin tools). */}
+      <ParcelServices />
 
       <Section title="🏠 Latest listings" action="View all" actionTo="/search">
         {latest?.length ? (

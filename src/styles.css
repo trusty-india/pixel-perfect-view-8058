@@ -271,6 +271,83 @@
   will-change: transform;
 }
 
+/* Parcel Services (Home) — lightweight SVG/CSS motion only (transform, stroke
+   dash-offset, offset-distance). No JS loops, no layout shift. */
+@keyframes pin-pulse {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@utility pin-pulse {
+  animation: pin-pulse 2.4s ease-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@keyframes route-march {
+  to {
+    stroke-dashoffset: -15;
+  }
+}
+
+@utility route-march {
+  animation: route-march 1.2s linear infinite;
+}
+
+@keyframes parcel-travel {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+@utility parcel-travel {
+  animation: parcel-travel 9s linear infinite alternate;
+}
+
+@keyframes map-pan {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-2.5%);
+  }
+}
+
+@utility map-pan {
+  animation: map-pan 14s ease-in-out infinite alternate;
+}
+
+/* Parcel feature-card carousel slides: same -ml-3 / pl-3 gap pattern as
+   .cat-slide. Exactly 1 full card per view on phones (basis 100%), 3 across
+   from md up. */
+@utility parcel-slide {
+  min-width: 100%;
+  width: 100%;
+
+  @media (min-width: 640px) {
+    min-width: calc(100% / 2);
+    width: calc(100% / 2);
+  }
+
+  @media (min-width: 768px) {
+    min-width: calc(100% / 3);
+    width: calc(100% / 3);
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -384,7 +461,11 @@
   .hero-img-zoom,
   .fade-up,
   .page-in-forward,
-  .page-in-back {
+  .page-in-back,
+  .pin-pulse,
+  .route-march,
+  .parcel-travel,
+  .map-pan {
     animation: none !important;
   }
   .tap-scale,

@@ -557,6 +557,60 @@ export type Database = {
           },
         ]
       }
+      parcel_requests: {
+        Row: {
+          created_at: string
+          customer_mobile: string
+          customer_name: string
+          delivery_address: string
+          id: string
+          parcel_image_url: string | null
+          parcel_weight: number
+          pickup_address: string
+          price: number
+          receiver_mobile: string
+          receiver_name: string
+          status: string
+          token_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_mobile: string
+          customer_name: string
+          delivery_address: string
+          id?: string
+          parcel_image_url?: string | null
+          parcel_weight: number
+          pickup_address: string
+          price?: number
+          receiver_mobile: string
+          receiver_name: string
+          status?: string
+          token_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_mobile?: string
+          customer_name?: string
+          delivery_address?: string
+          id?: string
+          parcel_image_url?: string | null
+          parcel_weight?: number
+          pickup_address?: string
+          price?: number
+          receiver_mobile?: string
+          receiver_name?: string
+          status?: string
+          token_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -884,6 +938,19 @@ export type Database = {
     }
     Functions: {
       admin_exists: { Args: never; Returns: boolean }
+      book_parcel: {
+        Args: {
+          p_customer_name: string
+          p_customer_mobile: string
+          p_pickup_address: string
+          p_receiver_name: string
+          p_receiver_mobile: string
+          p_delivery_address: string
+          p_parcel_weight: number
+          p_parcel_image_url?: string | null
+        }
+        Returns: string
+      }
       claim_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {

@@ -1,4 +1,9 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useNavigate,
+  Link,
+  useSearch,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Building2 } from "lucide-react";
@@ -17,10 +22,19 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Access your 29Bricks account." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { returnTo?: string | undefined } => ({
+    // Only same-app paths are honored (must start with a single "/").
+    returnTo:
+      typeof search["returnTo"] === "string" &&
+      /^\/[^/]/.test(search["returnTo"])
+        ? search["returnTo"]
+        : undefined,
+  }),
   component: AuthPage,
 });
 
 function AuthPage() {
+  const returnTo = useSearch({ from: "/auth" }).returnTo;
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,8 +45,9 @@ function AuthPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) void navigate({ to: "/profile", replace: true });
-  }, [user, navigate]);
+    if (user)
+      void navigate({ to: returnTo ?? "/profile", replace: true });
+  }, [user, navigate, returnTo]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +69,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        void navigate({ to: "/profile" });
+        void navigate({ to: returnTo ?? "/profile" });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
