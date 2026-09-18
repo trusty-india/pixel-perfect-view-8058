@@ -9,6 +9,7 @@ import {
   MapPin,
   Phone,
   MessageCircle,
+  ArrowRight,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CategoryExplorer, type CategoryRow } from "@/components/category-carousel";
@@ -19,6 +20,7 @@ import {
   categoriesQuery,
   listingsQuery,
   parseCategoryImages,
+  parseHeroConfig,
   requirementsQuery,
   servicesQuery,
   settingsQuery,
@@ -95,6 +97,10 @@ function Index() {
   const { data: services } = useQuery(servicesQuery());
   const { data: requirements } = useQuery(requirementsQuery(6));
 
+  // Home hero: fully admin-controlled (Business Profile & Settings → Home Hero).
+  // No automatic greeting or city text is ever rendered here.
+  const hero = parseHeroConfig(settings?.social_links);
+
   // Category tap → let the section play its scale transition, slide the home
   // page out, then open the existing category page. Plain timeouts (not CSS
   // events) so repeated taps and reduced-motion stay predictable. Guarded only
@@ -131,9 +137,60 @@ function Index() {
   return (
     <AppShell>
       <div className={cn(enterClass, slideOut)}>
+      {/* Home hero — full-bleed rectangular banner. Admin-controlled text
+          only; the -mx-4 breaks out of the page px-4 so the banner touches
+          both screen edges with no white gaps and no horizontal overflow.
+          Image stays SHARP: no blur, no card-wide wash — readability comes
+          from a localized bottom gradient + text-shadow on the text only. */}
+      <div
+        className="rise-in relative -mx-4 overflow-hidden bg-gradient-to-b from-[#1f3a73] to-[#5c1010] shadow-card"
+        style={{ aspectRatio: "16 / 9" }}
+      >
+        {hero.image_url ? (
+          <img
+            src={hero.image_url}
+            alt={hero.title || "Home hero"}
+            onError={withFallback}
+            className="absolute inset-0 size-full object-cover"
+          />
+        ) : (
+          <img
+            src={HERO_FALLBACK}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full object-cover"
+          />
+        )}
+        {/* Localized readability gradient — bottom quarter only; the rest of
+            the image stays fully visible */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/60 via-black/25 to-transparent"
+        />
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-4">
+          <h1 className="text-shadow-hero font-display text-xl font-bold leading-tight text-white">
+            {hero.title.trim() || settings?.business_name || "29Bricks"}
+          </h1>
+          <p className="text-shadow-hero mt-0.5 line-clamp-2 text-xs leading-snug text-white/95">
+            {hero.description.trim() ||
+              settings?.description ||
+              "Property, rooms, shops, land and trusted local services."}
+          </p>
+          {hero.cta_text.trim() ? (
+            <a
+              href={hero.cta_url.trim() || "/search"}
+              className="mt-2 inline-flex items-center gap-1 rounded-full gradient-wine px-4 py-2 text-xs font-bold text-white shadow-wine-glow tap-scale"
+            >
+              {hero.cta_text}
+              <ArrowRight className="size-3.5" />
+            </a>
+          ) : null}
+        </div>
+      </div>
+
       {/* Search bar */}
       <form
-        className="flex items-center gap-2 rounded-2xl border bg-card p-2 pl-3.5 shadow-soft"
+        className="mt-4 flex items-center gap-2 rounded-2xl border bg-card p-2 pl-3.5 shadow-soft"
         onSubmit={(e) => {
           e.preventDefault();
           navigate({ to: "/search", search: { q } });

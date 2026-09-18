@@ -75,13 +75,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="block truncate font-display text-base font-bold tracking-tight">
                 {settings?.business_name ?? "29Bricks"}
               </span>
-              <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                <MapPin className="size-2.5 shrink-0 text-wine" />
-                <span className="truncate">{city}</span>
-                <span aria-hidden>·</span>
-                <span className="truncate">
-                  Powered by {settings?.powered_by ?? "Sarkar Properties"}
-                </span>
+              {/* Powered-by only: the duplicate location under the logo was
+                  removed (the header location Select remains the single source).
+                  No truncate — the line wraps instead of being cut off on
+                  narrow phones. */}
+              <span className="block text-[10px] font-medium leading-tight text-muted-foreground">
+                Powered by {settings?.powered_by ?? "Sarkar Properties"}
               </span>
             </span>
           </Link>
