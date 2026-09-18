@@ -202,23 +202,19 @@
 }
 
 /* Category carousel slides: embla computes snap points from the rendered
-   slide widths. Roughly 3 to 3.5 cards visible across common phone widths so
-   the next card peeks at the edge and invites swiping. */
+   slide widths. The container is offset -ml-3 and each slide carries pl-3 as
+   its gap, so a slide width of exactly 100%/3 renders three full cards per
+   view — first card flush left, third flush right, and the 4th card starting
+   precisely at the viewport edge (hidden until the user swipes) at every
+   phone width. 100%/5 on ≥640px screens. Percentages track the real container
+   width, so no hardcoded px can leak a partial 4th card. */
 @utility cat-slide {
-  min-width: calc((100% - 2.5rem) / 3.4);
-  width: calc((100% - 2.5rem) / 3.4);
+  min-width: calc(100% / 3);
+  width: calc(100% / 3);
 
-  @media (min-width: 360px) {
-    min-width: calc((100% - 2.5rem) / 3.4);
-    width: calc((100% - 2.5rem) / 3.4);
-  }
-  @media (min-width: 412px) {
-    min-width: calc((100% - 2.5rem) / 3.5);
-    width: calc((100% - 2.5rem) / 3.5);
-  }
   @media (min-width: 640px) {
-    min-width: calc((100% - 3.5rem) / 5);
-    width: calc((100% - 3.5rem) / 5);
+    min-width: calc(100% / 5);
+    width: calc(100% / 5);
   }
 }
 

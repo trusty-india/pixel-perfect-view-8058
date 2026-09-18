@@ -154,10 +154,10 @@ function categoryTheme(name: string, index: number): CategoryTheme {
  * tall artwork-covered cards with per-category color washes, top-left icon
  * chips, white title + tagline and a circular arrow button.
  *
- * One embla carousel at every breakpoint (`.cat-slide` widths): ~3.4 cards
- * visible on phones with the next card peeking, 5 on small tablets, 6.5 on
- * laptop and all 8 in a row on desktop. Arrows float over the carousel edges;
- * pagination dots sit below.
+ * One embla carousel at every breakpoint (`.cat-slide` widths): exactly 3
+ * full cards visible on phones (4th starts precisely at the viewport edge,
+ * hidden until the user swipes), 5 on ≥640px screens. Arrows float over the
+ * carousel edges; pagination dots sit below.
  *
  * Tapping a card does not navigate instantly — the page wires `onSelect` to
  * play the slide-out transition first, then opens the existing category page
@@ -177,6 +177,12 @@ export function CategoryExplorer({
     align: "start",
     slidesToScroll: 1,
     containScroll: "trimSnaps",
+    // Claim drags after 6px of movement (embla default is 10px) so touch
+    // feels immediate, and snap a touch quicker than the default duration of
+    // 25. Embla already applies touch-action: pan-y on the container so
+    // vertical page scrolling stays native.
+    dragThreshold: 6,
+    duration: 20,
   });
   const [selected, setSelected] = useState(0);
   const [snapCount, setSnapCount] = useState(0);
