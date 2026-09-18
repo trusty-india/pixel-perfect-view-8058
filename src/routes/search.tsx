@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ListingCard, type ListingRow } from "@/components/listing-card";
@@ -17,6 +17,10 @@ import {
 import { listingsQuery } from "@/lib/data";
 import { useCity } from "@/lib/city";
 import { BHK_OPTIONS, FURNISHING, PROPERTY_TYPES } from "@/lib/format";
+import { armPageTransition,
+  clearPageTransition,
+  consumePageTransition,
+} from "@/lib/page-transition";
 import { cn } from "@/lib/utils";
 
 type SearchParams = {
@@ -51,6 +55,21 @@ function SearchPage() {
   const params = Route.useSearch();
   const navigate = useNavigate({ from: "/search" });
   const { city } = useCity();
+  // Slide-in transition: when arriving here from a category tap, the home
+  // page armed a "forward" direction — consume it and slide in from the right.
+  // Consumed on first render (initial state) so the class exists on frame one
+  // and survives React StrictMode double-mounting. Any later in-page search
+  // updates don't re-run the animation.
+  const [slideIn] = useState<null | "page-in-forward" | "page-in-back">(() =>
+    consumePageTransition() as null | "page-in-forward" | "page-in-back",
+  );
+  // Re-arm "back" while this page is open, so browser-back slides home in from
+  // the left. Cleared when leaving to anywhere else (e.g. a listing page), so
+  // other navigations don't replay the slide.
+  useEffect(() => {
+    armPageTransition("back");
+    return () => clearPageTransition();
+  }, []);
   const [text, setText] = useState(params.q ?? "");
   const [showFilters, setShowFilters] = useState(false);
   const [bhk, setBhk] = useState("");
@@ -77,6 +96,7 @@ function SearchPage() {
 
   return (
     <AppShell>
+      <div className={slideIn ?? undefined}>
       {/* Search header */}
       <form
         className="flex gap-2"
@@ -217,6 +237,7 @@ function SearchPage() {
           <EmptyState text="No properties match your search. Try changing filters or city." />
         </div>
       ) : null}
+      </div>
     </AppShell>
   );
 }

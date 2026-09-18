@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Search,
   Wrench,
@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { CategoryExplorer, type CategoryRow } from "@/components/category-carousel";
 import { ListingCard, type ListingRow } from "@/components/listing-card";
 import { EmptyState, HScroll, Section } from "@/components/section";
 import { Input } from "@/components/ui/input";
@@ -25,8 +26,12 @@ import {
   settingsQuery,
 } from "@/lib/data";
 import { useCity } from "@/lib/city";
-import { categoryIcon } from "@/lib/category-icons";
 import { formatINR } from "@/lib/format";
+import {
+  armPageTransition,
+  clearPageTransition,
+  hasPageTransition,
+} from "@/lib/page-transition";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -88,21 +93,21 @@ function activeBanners(rows: BannerRow[] | undefined): BannerRow[] {
   return [...inWindow].sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned));
 }
 
-/** Soft tile tints rotated across category cards — existing brand palette + wine. */
-const CATEGORY_TINTS = [
-  "bg-sky/25 text-sky-foreground",
-  "bg-wine-soft text-wine-deep",
-  "bg-primary/10 text-primary",
-  "bg-brand/10 text-brand",
-  "bg-success/12 text-success",
-  "bg-warning/20 text-warning-foreground",
-  "bg-accent text-accent-foreground",
-  "bg-muted text-foreground",
-];
+
+const PAGE_OUT_FORWARD = "page-out-forward";
+const PAGE_IN_BACK = "page-in-back";
 
 function Index() {
   const { city } = useCity();
   const navigate = useNavigate();
+  // Sliding page transition state. A "page-out-*" class while a category tap
+  // slides the home content out; "page-in-back" on first render after a
+  // browser-back from the search page. Read via peek (hasPageTransition), not
+  // consume, in the initial state so the class exists from the very first
+  // painted frame and survives React StrictMode double-invoked initializers.
+  const [slideClass, setSlideClass] = useState<
+    null | typeof PAGE_OUT_FORWARD | typeof PAGE_IN_BACK
+  >(() => (hasPageTransition("back") ? PAGE_IN_BACK : null));
   const [q, setQ] = useState("");
   const { data: settings } = useQuery(settingsQuery);
   const { data: categories } = useQuery(categoriesQuery);
@@ -119,6 +124,29 @@ function Index() {
   // No automatic greeting or city text is ever rendered here.
   const hero = parseHeroConfig(settings?.social_links);
 
+  // Category tap → let the section play its scale transition, slide the home
+  // page out, then open the existing category page. Plain timeouts (not CSS
+  // events) so repeated taps and reduced-motion stay predictable.
+  const openCategory = useCallback(
+    (slug: string) => {
+      if (slideClass) return; // transition already running
+      setSlideClass(PAGE_OUT_FORWARD);
+      window.setTimeout(() => {
+        armPageTransition("forward");
+        void navigate({ to: "/search", search: { category: slug } });
+      }, 260);
+    },
+    [navigate, slideClass],
+  );
+
+  // Clear stale transition flags once the enter animation has finished, so a
+  // later plain navigation (e.g. bottom-nav "Home") doesn't replay it.
+  useEffect(() => {
+    if (!slideClass) return;
+    const t = window.setTimeout(clearPageTransition, 500);
+    return () => window.clearTimeout(t);
+  }, [slideClass]);
+
   const banners = activeBanners(announcements as BannerRow[] | undefined);
 
   // Popular locations derived from the same live listings query (DB-driven).
@@ -132,6 +160,7 @@ function Index() {
 
   return (
     <AppShell>
+      <div className={slideClass ?? undefined}>
       {/* Home hero: admin-selected image (or clean built-in fallback) with
           admin title, description and CTA. Nothing here is auto-generated. */}
       <div
@@ -198,36 +227,10 @@ function Index() {
         </button>
       </form>
 
-      <Section title="Browse categories">
-        <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-4">
-          {(categories ?? []).map((c, i) => {
-            const Icon = categoryIcon(c.icon);
-            return (
-              <Link
-                key={c.id}
-                to="/search"
-                search={{ category: c.slug }}
-                className="flex flex-col items-center gap-1.5 rounded-2xl border bg-card p-2.5 text-center shadow-soft tap-scale hover:border-wine/40"
-              >
-                <span
-                  className={cn(
-                    "grid size-12 place-items-center rounded-2xl shadow-soft transition-transform duration-200",
-                    CATEGORY_TINTS[i % CATEGORY_TINTS.length],
-                  )}
-                >
-                  <Icon className="size-5.5" />
-                </span>
-                <span className="text-[11px] font-semibold leading-tight">{c.name}</span>
-                {c.subtitle ? (
-                  <span className="line-clamp-1 text-[9px] leading-tight text-muted-foreground">
-                    {c.subtitle}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
-        </div>
-      </Section>
+      <CategoryExplorer
+        categories={categories as CategoryRow[] | undefined}
+        onSelect={openCategory}
+      />
 
       <div className="mt-4 grid grid-cols-3 gap-3">
         <QuickLink to="/services" icon={<Wrench className="size-4" />} label="Services" />
@@ -467,6 +470,7 @@ function Index() {
           </div>
         </div>
       </footer>
+      </div>
     </AppShell>
   );
 }
