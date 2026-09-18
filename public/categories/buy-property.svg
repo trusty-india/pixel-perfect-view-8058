@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 840" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE9CB"/><stop offset="1" stop-color="#FFD9A0"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF6E0"/><stop offset="1" stop-color="#FFF6E0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7F1D1D" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#BE185D" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7F1D1D" stop-opacity="0.98"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="840" fill="url(#sky)"/>
+  <circle cx="322" cy="128" r="120" fill="url(#sun)"/>
+  <circle cx="322" cy="128" r="32" fill="#FFF9EA"/>
+  <g fill="#FFFFFF" opacity="0.55">
+    <ellipse cx="86" cy="140" rx="58" ry="15"/><ellipse cx="140" cy="172" rx="42" ry="11"/>
+  </g>
+  <g>
+    <rect x="46" y="440" width="12" height="52" fill="#6B8F5A"/>
+    <circle cx="52" cy="416" r="44" fill="#7FB069"/>
+    <circle cx="344" cy="448" r="38" fill="#8CBF77"/>
+    <rect x="338" y="470" width="10" height="46" fill="#6B8F5A"/>
+  </g>
+  <rect x="72" y="472" width="256" height="188" fill="#F8F1E7"/>
+  <rect x="56" y="382" width="288" height="96" fill="#FDF9F2"/>
+  <polygon points="44,388 200,296 356,388" fill="#8B5E3C"/>
+  <polygon points="86,382 200,314 314,382" fill="#7A5133"/>
+  <g fill="#FFD98E" stroke="#8B5E3C" stroke-width="4">
+    <rect x="92" y="404" width="48" height="54" rx="4"/>
+    <rect x="260" y="404" width="48" height="54" rx="4"/>
+    <rect x="170" y="500" width="36" height="42" rx="3"/>
+  </g>
+  <rect x="186" y="556" width="48" height="104" rx="4" fill="#6B4226"/>
+  <circle cx="222" cy="612" r="3.5" fill="#FFD98E"/>
+  <rect x="0" y="648" width="400" height="192" fill="#9CCB86"/>
+  <polygon points="158,652 242,652 302,840 98,840" fill="#EADFC8"/>
+  <g fill="#6FA85C">
+    <circle cx="40" cy="668" r="22"/><circle cx="356" cy="676" r="26"/><circle cx="86" cy="700" r="14"/>
+  </g>
+  <rect y="452" width="400" height="388" fill="url(#wash)"/>
+</svg>

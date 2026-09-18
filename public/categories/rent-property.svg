@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 840" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDF4E7"/><stop offset="1" stop-color="#F5E3C8"/>
+    </linearGradient>
+    <linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9A3412" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#EA580C" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#9A3412" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="sofa" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7EFE2"/><stop offset="1" stop-color="#E8D9C2"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="840" fill="url(#wall)"/>
+  <rect x="0" y="0" width="400" height="330" fill="#F0DFC4"/>
+  <g>
+    <rect x="52" y="60" width="128" height="150" rx="8" fill="#8FC1E3"/>
+    <rect x="46" y="54" width="140" height="10" rx="5" fill="#B98A5B"/>
+    <g stroke="#FFFFFF" stroke-width="5" opacity="0.8">
+      <line x1="116" y1="60" x2="116" y2="210"/><line x1="52" y1="135" x2="180" y2="135"/>
+    </g>
+    <rect x="238" y="88" width="110" height="84" rx="6" fill="#EFD9A8" stroke="#C9A15C" stroke-width="5"/>
+    <circle cx="293" cy="130" r="17" fill="#E2725B"/>
+    <polygon points="293,118 297,128 308,128 299,135 302,146 293,139 284,146 287,135 278,128 289,128" fill="#F7E3B1"/>
+  </g>
+  <rect x="0" y="330" width="400" height="14" fill="#D9C3A0"/>
+  <rect x="0" y="344" width="400" height="496" fill="#EFE2CB"/>
+  <g>
+    <rect x="36" y="380" width="328" height="96" rx="14" fill="url(#sofa)"/>
+    <rect x="36" y="446" width="328" height="70" rx="14" fill="#EFE6D6"/>
+    <rect x="60" y="396" width="70" height="52" rx="10" fill="#E2725B"/>
+    <rect x="150" y="396" width="70" height="52" rx="10" fill="#D9B26A"/>
+    <rect x="240" y="396" width="70" height="52" rx="10" fill="#EADFC8"/>
+    <rect x="16" y="470" width="24" height="70" rx="8" fill="#D9C3A0"/>
+    <rect x="360" y="470" width="24" height="70" rx="8" fill="#D9C3A0"/>
+  </g>
+  <g>
+    <ellipse cx="200" cy="596" rx="92" ry="16" fill="#D9C3A0"/>
+    <rect x="168" y="572" width="64" height="20" rx="6" fill="#C89B62"/>
+    <circle cx="200" cy="566" r="4" fill="#A97C3F"/>
+    <g fill="#7FA06B"><circle cx="140" cy="576" r="8"/><circle cx="258" cy="578" r="7"/></g>
+  </g>
+  <rect y="352" width="400" height="488" fill="url(#wash)"/>
+</svg>

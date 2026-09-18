@@ -201,6 +201,27 @@
   }
 }
 
+/* Category carousel slides: embla computes snap points from the rendered
+   slide widths. Roughly 3 to 3.5 cards visible across common phone widths so
+   the next card peeks at the edge and invites swiping. */
+@utility cat-slide {
+  min-width: calc((100% - 2.5rem) / 3.4);
+  width: calc((100% - 2.5rem) / 3.4);
+
+  @media (min-width: 360px) {
+    min-width: calc((100% - 2.5rem) / 3.4);
+    width: calc((100% - 2.5rem) / 3.4);
+  }
+  @media (min-width: 412px) {
+    min-width: calc((100% - 2.5rem) / 3.5);
+    width: calc((100% - 2.5rem) / 3.5);
+  }
+  @media (min-width: 640px) {
+    min-width: calc((100% - 3.5rem) / 5);
+    width: calc((100% - 3.5rem) / 5);
+  }
+}
+
 @utility no-scrollbar {
   scrollbar-width: none;
 
