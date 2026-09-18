@@ -317,6 +317,18 @@
   animation: parcel-travel 9s linear infinite alternate;
 }
 
+/* The van has twin engines: SMIL <animateMotion> (universal, incl. iOS
+   Safari) and a CSS motion-path twin. Where CSS motion-path is supported the
+   SMIL timeline is paused so only the CSS twin animates — identical visuals,
+   so either engine alone is correct. Engines WITHOUT CSS motion-path (iOS
+   Safari and older Android WebViews) simply ignore this block and the SMIL
+   animation drives the van. */
+@supports (offset-path: path("M0 0")) {
+  .parcel-travel animateMotion {
+    animation-play-state: paused;
+  }
+}
+
 @keyframes map-pan {
   from {
     transform: translateX(0);
@@ -331,8 +343,10 @@
 }
 
 /* Parcel feature-card carousel slides: same -ml-3 / pl-3 gap pattern as
-   .cat-slide. Exactly 1 full card per view on phones (basis 100%), 3 across
-   from md up. */
+   .cat-slide. Exactly ONE full card per view on phones — never squeezed,
+   never a partial card. 2-up from 640px, the desktop 3-up from 768px
+   (unchanged). Percentages track the real container, so there is no width
+   at which cards get squeezed into illegibility. */
 @utility parcel-slide {
   min-width: 100%;
   width: 100%;
@@ -452,7 +466,10 @@
   animation: shimmer 1.6s linear infinite;
 }
 
-/* Respect users who prefer reduced motion: silence decorative loops. */
+/* Respect users who prefer reduced motion: silence decorative loops.
+   The van's SMIL <animateMotion> is a presentation attribute — CSS
+   `animation: none` cannot stop it, so it must be paused explicitly. This
+   only triggers when the OS/browser actually requests reduced motion. */
 @media (prefers-reduced-motion: reduce) {
   .rise-in,
   .float-soft,
@@ -467,6 +484,9 @@
   .parcel-travel,
   .map-pan {
     animation: none !important;
+  }
+  .parcel-travel animateMotion {
+    animation-play-state: paused;
   }
   .tap-scale,
   .card-lift,

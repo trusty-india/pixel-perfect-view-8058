@@ -160,17 +160,21 @@ export function ParcelServices() {
 
       {/* Banner — illustrated Lucknow map + animated pickup → transit → drop
           route. Vector art only (sharp at any size), no blur, no heavy
-          overlay; motion is transform/stroke based and reduced-motion aware. */}
+          overlay; motion is transform/stroke based and reduced-motion aware.
+          Desktop keeps the full-bleed background map (unchanged); mobile gets
+          a dedicated in-flow map sized to the exact viewBox aspect so the
+          route, pins and van are never cropped. */}
       <div className="relative overflow-hidden rounded-3xl border bg-card shadow-soft">
         <div
           aria-hidden
           className="absolute inset-0 bg-gradient-to-br from-sky-50 via-white to-rose-50"
         />
+        {/* Desktop full-bleed background map — exact previous markup. */}
         <div
           aria-hidden
-          className="map-pan absolute -inset-x-[6%] inset-y-0"
+          className="map-pan absolute -inset-x-[6%] inset-y-0 hidden lg:block"
         >
-          <RouteMap className="h-full w-full" />
+          <RouteMap idPrefix="pd" crop="slice" className="h-full w-full" />
         </div>
         <div
           aria-hidden
@@ -235,9 +239,23 @@ export function ParcelServices() {
             </div>
           </div>
         </div>
+
+        {/* Mobile map — in-flow, exact viewBox aspect ratio (560:300):
+            "meet" keeps every route point, pin and the van fully inside the
+            visible box at any phone width. Van animation uses the pure-SMIL
+            fallback (identical visuals) so it renders on all mobile engines,
+            including iOS Safari where CSS offset-path on SVG is unsupported. */}
+        <div aria-hidden className="border-t border-border/60 p-2 pb-0 lg:hidden">
+          <RouteMap idPrefix="pm" crop="meet" className="h-auto w-full" />
+        </div>
       </div>
 
-      {/* Three separate, clickable feature cards (mobile carousel / md+ row) */}
+      {/* Three separate, clickable feature cards (mobile carousel / md+ row).
+          Card anatomy is flex-column: artwork on top (in-flow), text block
+          below (in-flow, never absolutely positioned) so titles, description
+          and the action chip can never clip or overlap at any width. The
+          artwork still fills its area edge-to-edge (object-cover) so the
+          premium look is unchanged. */}
       <div className="relative mt-3">
         <div ref={emblaRef} className="overflow-hidden">
           <div className="-ml-3 flex">
@@ -249,47 +267,49 @@ export function ParcelServices() {
                     type="button"
                     onClick={() => setDialog(c.id)}
                     aria-label={`${c.title} — ${c.cta}`}
-                    className="card-lift tap-scale relative block h-full w-full overflow-hidden rounded-3xl border bg-card text-left shadow-soft"
+                    className="card-lift tap-scale flex h-full w-full flex-col overflow-hidden rounded-3xl border bg-card text-left shadow-soft"
                   >
-                    <img
-                      src={c.art}
-                      alt=""
-                      aria-hidden
-                      loading="lazy"
-                      className="h-40 w-full object-cover sm:h-44"
-                    />
-                    <div
-                      aria-hidden
-                      className={cn(
-                        "absolute inset-x-0 bottom-0 h-3/5",
-                        c.overlay,
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        "absolute left-3 top-3 grid size-9 place-items-center rounded-xl text-white shadow-soft",
-                        c.iconBg,
-                      )}
-                    >
-                      <Icon className="size-4" />
-                    </span>
-                    <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                      <p className="text-shadow-hero font-display text-base font-bold leading-snug">
-                        {c.title}
-                      </p>
-                      <p className="text-shadow-hero mt-0.5 text-xs leading-snug text-white/90">
-                        {c.desc}
-                      </p>
+                    <span className="relative block h-32 w-full shrink-0 overflow-hidden sm:h-36">
+                      <img
+                        src={c.art}
+                        alt=""
+                        aria-hidden
+                        loading="lazy"
+                        className="absolute inset-0 size-full object-cover"
+                      />
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "absolute inset-x-0 bottom-0 h-3/5",
+                          c.overlay,
+                        )}
+                      />
                       <span
                         className={cn(
-                          "mt-2.5 inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-bold shadow-soft",
+                          "absolute left-3 top-3 grid size-9 place-items-center rounded-xl text-white shadow-soft",
+                          c.iconBg,
+                        )}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                    </span>
+                    <span className="flex grow flex-col items-start gap-1 p-4 text-foreground">
+                      <span className="font-display text-base font-bold leading-snug">
+                        {c.title}
+                      </span>
+                      <span className="text-xs leading-relaxed text-muted-foreground">
+                        {c.desc}
+                      </span>
+                      <span
+                        className={cn(
+                          "mt-2 inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-bold shadow-soft",
                           c.btn,
                         )}
                       >
                         {c.cta}
                         <ArrowRight className="size-3.5" />
                       </span>
-                    </div>
+                    </span>
                   </button>
                 </div>
               );
@@ -1055,17 +1075,36 @@ function SectionHeader() {
 }
 
 /** Illustrated map-style Lucknow: soft blocks, roads, river, a landmark and
- *  the animated pickup → delivery route with a moving courier van. Pure SVG,
- *  animated with CSS (stroke-dashoffset march, offset-path travel, pin
- *  pulses) — no JS loops, no layout shift. DECORATIVE ONLY. */
-function RouteMap({ className }: { className?: string }) {
+ *  the animated pickup → delivery route with a moving courier van. Pure SVG.
+ *
+ *  Motion architecture (all CSS/SMIL, zero JS loops):
+ *  • route-march — CSS stroke-dashoffset on the dashed route
+ *  • pin-pulse — CSS scale pulse on the pin halos
+ *  • van — <animateMotion> SMIL along the SAME path string (parsed from the
+ *    path attribute itself, so it can never drift from the visible route),
+ *    plus a CSS offset-path twin guarded by @supports. SMIL runs everywhere
+ *    (Chrome, Safari/iOS, Firefox); where CSS motion-path is also supported
+ *    the SMIL animation is paused via CSS so only the CSS twin animates —
+ *    both implementations produce identical visuals, so either alone is
+ *    correct. Decorative only — never real tracking. */
+function RouteMap({
+  className,
+  idPrefix,
+  crop = "slice",
+}: {
+  className?: string;
+  /** Unique prefix for SMIL <mpath> ids when the map renders twice. */
+  idPrefix: string;
+  /** slice = full-bleed desktop crop; meet = fully visible (mobile). */
+  crop?: "slice" | "meet";
+}) {
   const route =
     "M96 208 C170 208 190 140 280 140 C370 140 370 96 464 96";
   return (
     <svg
       viewBox="0 0 560 300"
       className={className}
-      preserveAspectRatio="xMidYMid slice"
+      preserveAspectRatio={`xMidYMid ${crop}`}
       role="img"
       aria-label="Illustrated map of Lucknow showing a parcel route from pickup to delivery"
     >
@@ -1111,8 +1150,9 @@ function RouteMap({ className }: { className?: string }) {
         <rect x="372" y="250" width="5" height="14" fill="#A16207" />
         <circle cx="374" cy="246" r="9" fill="#BBF7D0" />
       </g>
-      {/* animated dashed route */}
+      {/* animated dashed route (id referenced by the van's <mpath>) */}
       <path
+        id={`${idPrefix}-route`}
         d={route}
         fill="none"
         stroke="#E11D48"
@@ -1137,11 +1177,11 @@ function RouteMap({ className }: { className?: string }) {
         />
         <circle r="11" fill="#16A34A" stroke="#FFFFFF" strokeWidth="3" />
       </g>
-      {/* courier van travelling along the route */}
-      <g
-        className="parcel-travel"
-        style={{ offsetPath: `path("${route}")`, offsetRotate: "0deg" }}
-      >
+      {/* courier van travelling along the route. Primary engine: SMIL
+          <animateMotion> (universal support incl. iOS Safari). Where CSS
+          motion-path is also available, SMIL is paused and the CSS twin
+          animates instead — identical keyframes, identical visuals. */}
+      <g className="parcel-travel" style={{ offsetPath: `path("${route}")`, offsetRotate: "0deg" }}>
         <g transform="translate(0 -13)">
           <rect
             x="-15"
@@ -1158,6 +1198,16 @@ function RouteMap({ className }: { className?: string }) {
           <circle cx="-7" cy="10" r="4" fill="#334155" />
           <circle cx="8" cy="10" r="4" fill="#334155" />
         </g>
+        <animateMotion
+          dur="9s"
+          repeatCount="indefinite"
+          keyPoints="0;1"
+          keyTimes="0;1"
+          calcMode="linear"
+          rotate="auto"
+        >
+          <mpath href={`#${idPrefix}-route`} />
+        </animateMotion>
       </g>
     </svg>
   );
