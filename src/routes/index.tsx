@@ -9,7 +9,6 @@ import {
   MapPin,
   Phone,
   MessageCircle,
-  ArrowRight,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CategoryExplorer, type CategoryRow } from "@/components/category-carousel";
@@ -17,11 +16,9 @@ import { ListingCard, type ListingRow } from "@/components/listing-card";
 import { EmptyState, HScroll, Section } from "@/components/section";
 import { Input } from "@/components/ui/input";
 import {
-  announcementsQuery,
   categoriesQuery,
   listingsQuery,
   parseCategoryImages,
-  parseHeroConfig,
   requirementsQuery,
   servicesQuery,
   settingsQuery,
@@ -65,36 +62,6 @@ function withFallback(e: React.SyntheticEvent<HTMLImageElement>) {
   img.src = HERO_FALLBACK;
 }
 
-type BannerRow = {
-  id: string;
-  title: string;
-  message: string | null;
-  image_url: string | null;
-  button_text: string | null;
-  button_url: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  start_at: string | null;
-  end_at: string | null;
-  is_pinned: boolean;
-};
-
-/** Announcements currently inside their admin-configured window (promo strips). */
-function activeBanners(rows: BannerRow[] | undefined): BannerRow[] {
-  if (!rows?.length) return [];
-  const now = new Date();
-  const hhmm = now.toTimeString().slice(0, 8);
-  const inWindow = rows.filter((r) => {
-    if (r.start_at && new Date(r.start_at) > now) return false;
-    if (r.end_at && new Date(r.end_at) < now) return false;
-    if (r.start_time && r.end_time) return hhmm >= r.start_time && hhmm <= r.end_time;
-    return true;
-  });
-  // Pinned announcements lead; the rest follow in admin sort order.
-  return [...inWindow].sort((a, b) => Number(b.is_pinned) - Number(a.is_pinned));
-}
-
-
 const PAGE_OUT_FORWARD = "page-out-forward";
 const PAGE_IN_BACK = "page-in-back";
 
@@ -120,7 +87,6 @@ function Index() {
   const [q, setQ] = useState("");
   const { data: settings } = useQuery(settingsQuery);
   const { data: categories } = useQuery(categoriesQuery);
-  const { data: announcements } = useQuery(announcementsQuery);
   const { data: featured } = useQuery(listingsQuery({ city, featured: true, limit: 10 }));
   const { data: latest } = useQuery(listingsQuery({ city, limit: 12 }));
   const { data: rooms } = useQuery(listingsQuery({ city, propertyType: "Room", limit: 10 }));
@@ -128,10 +94,6 @@ function Index() {
   const { data: shops } = useQuery(listingsQuery({ city, propertyType: "Shop", limit: 10 }));
   const { data: services } = useQuery(servicesQuery());
   const { data: requirements } = useQuery(requirementsQuery(6));
-
-  // Home hero: fully admin-controlled (Business Profile & Settings → Home Hero).
-  // No automatic greeting or city text is ever rendered here.
-  const hero = parseHeroConfig(settings?.social_links);
 
   // Category tap → let the section play its scale transition, slide the home
   // page out, then open the existing category page. Plain timeouts (not CSS
@@ -158,9 +120,6 @@ function Index() {
     return () => window.clearTimeout(t);
   }, [enterClass]);
 
-  const banners = activeBanners(announcements as BannerRow[] | undefined);
-
-  // Popular locations derived from the same live listings query (DB-driven).
   const popularLocations = useMemo(() => {
     const counts = new Map<string, number>();
     for (const l of (latest as ListingRow[] | undefined) ?? []) {
@@ -172,52 +131,9 @@ function Index() {
   return (
     <AppShell>
       <div className={cn(enterClass, slideOut)}>
-      {/* Home hero: admin-selected image (or clean built-in fallback) with
-          admin title, description and CTA. Nothing here is auto-generated. */}
-      <div
-        className="rise-in relative overflow-hidden rounded-3xl shadow-card"
-        style={{ aspectRatio: "16 / 10" }}
-      >
-        {hero.image_url ? (
-          <img
-            src={hero.image_url}
-            alt={hero.title || "Home hero"}
-            onError={withFallback}
-            className="hero-img-zoom absolute inset-0 size-full object-cover"
-          />
-        ) : (
-          <img
-            src={HERO_FALLBACK}
-            alt=""
-            aria-hidden
-            className="hero-img-zoom absolute inset-0 size-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.2_0.05_26/0.94)] via-[oklch(0.28_0.07_26/0.55)] to-[oklch(0.35_0.1_264/0.25)]" />
-        <div className="relative flex size-full flex-col justify-end p-5 text-primary-foreground">
-          <h1 className="fade-up text-shadow-hero font-display text-2xl font-bold leading-tight [animation-delay:80ms]">
-            {hero.title.trim() || settings?.business_name || "29Bricks"}
-          </h1>
-          <p className="fade-up text-shadow-hero mt-1 line-clamp-2 text-sm opacity-95 [animation-delay:160ms]">
-            {hero.description.trim() ||
-              settings?.description ||
-              "Property, rooms, shops, land and trusted local services."}
-          </p>
-          {hero.cta_text.trim() ? (
-            <a
-              href={hero.cta_url.trim() || "/search"}
-              className="fade-up mt-3 inline-flex w-fit items-center gap-1 rounded-full gradient-wine px-4 py-2 text-xs font-bold text-white shadow-wine-glow tap-scale [animation-delay:240ms]"
-            >
-              {hero.cta_text}
-              <ArrowRight className="size-3.5" />
-            </a>
-          ) : null}
-        </div>
-      </div>
-
       {/* Search bar */}
       <form
-        className="mt-4 flex items-center gap-2 rounded-2xl border bg-card p-2 pl-3.5 shadow-soft"
+        className="flex items-center gap-2 rounded-2xl border bg-card p-2 pl-3.5 shadow-soft"
         onSubmit={(e) => {
           e.preventDefault();
           navigate({ to: "/search", search: { q } });
@@ -261,50 +177,6 @@ function Index() {
           <EmptyState text="No featured properties in this city yet." />
         )}
       </Section>
-
-      {/* Premium promo strips — existing admin-controlled announcements */}
-      {banners.length ? (
-        <section className="mt-5 grid gap-2.5">
-          {banners.map((b) => (
-            <a
-              key={b.id}
-              href={b.button_url || "/search"}
-              className="flex items-center gap-3 overflow-hidden rounded-2xl border bg-card p-2 shadow-soft tap-scale"
-            >
-              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-wine-soft">
-                {b.image_url ? (
-                  <img
-                    src={b.image_url}
-                    alt=""
-                    aria-hidden
-                    onError={withFallback}
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <span className="grid size-full place-items-center bg-wine-soft text-wine-deep">
-                    <Megaphone className="size-6" />
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">{b.title}</p>
-                {b.message ? (
-                  <p className="truncate text-xs text-muted-foreground">{b.message}</p>
-                ) : (
-                  <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-wine">
-                    29Bricks special
-                  </p>
-                )}
-              </div>
-              {b.button_text ? (
-                <span className="shrink-0 rounded-full gradient-wine px-3 py-1.5 text-[11px] font-bold text-white">
-                  {b.button_text}
-                </span>
-              ) : null}
-            </a>
-          ))}
-        </section>
-      ) : null}
 
       <Section title="🏠 Latest listings" action="View all" actionTo="/search">
         {latest?.length ? (

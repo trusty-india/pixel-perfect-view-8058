@@ -331,15 +331,12 @@ function CategoryCard({
         />
       ) : null}
 
-      {/* Per-category color wash: saturates the bottom, artwork stays visible up top */}
+      {/* Localized readability treatment ONLY behind the text — the image
+          itself stays fully sharp. No card-wide color wash, no blur, no
+          backdrop-filter over the artwork. */}
       <span
         aria-hidden
-        className={cn("absolute inset-0 bg-gradient-to-t to-transparent", theme.overlay)}
-      />
-      {/* Bottom readability gradient so white text always wins */}
-      <span
-        aria-hidden
-        className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/50 via-black/20 to-transparent"
+        className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/55 via-black/25 to-transparent"
       />
 
       {/* Icon chip — real Lucide icon on a colored tile, top-left */}
@@ -352,12 +349,13 @@ function CategoryCard({
         <Icon className="size-4 transition-transform duration-300 group-hover:scale-110 md:size-5" />
       </span>
 
-      {/* Title, tagline, circular arrow — bottom of the card */}
+      {/* Title, tagline, circular arrow — bottom of the card; subtle text
+          shadow keeps white text readable over the sharp image */}
       <span className="relative mt-auto flex flex-col gap-0.5 p-2.5 pt-8 md:gap-1 md:p-4 md:pt-10">
-        <span className="font-display text-[11px] font-bold leading-tight text-white md:text-base">
+        <span className="font-display text-[11px] font-bold leading-tight text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.55)] md:text-base">
           {category.name}
         </span>
-        <span className="line-clamp-2 text-[9px] leading-snug text-white/85 md:text-xs">
+        <span className="line-clamp-2 text-[9px] leading-snug text-white/90 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)] md:text-xs">
           {blurb}
         </span>
         <span className="mt-1.5 flex size-6 items-center justify-center rounded-full bg-white/25 text-white ring-1 ring-white/50 backdrop-blur-sm transition-colors duration-200 group-hover:bg-white/40 md:size-8">
