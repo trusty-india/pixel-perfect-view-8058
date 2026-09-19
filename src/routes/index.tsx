@@ -223,23 +223,6 @@ function Index() {
         <QuickLink to="/student" icon={<GraduationCap className="size-4" />} label="Student Zone" />
       </div>
 
-      {/* Parcel Services — Lucknow → Lucknow local courier (replaces the
-          Featured properties strip's slot; the featured listings themselves
-          remain visible via /search and admin tools). */}
-      <ParcelServices />
-
-      <Section title="🏠 Latest listings" action="View all" actionTo="/search">
-        {latest?.length ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {(latest as ListingRow[]).map((l) => (
-              <ListingCard key={l.id} listing={l} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState text="No listings yet. Be the first to post one!" />
-        )}
-      </Section>
-
       <Section
         title="🛏️ Rooms near you"
         action="View all"
@@ -286,29 +269,6 @@ function Index() {
         )}
       </Section>
 
-      <Section title="🔎 People looking for property" action="View all" actionTo="/requirements">
-        {requirements?.length ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {requirements.map((r) => (
-              <div key={r.id} className="rounded-2xl border bg-card p-3 shadow-soft">
-                <p className="text-sm font-semibold">{r.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {r.purpose} · {r.city}
-                  {r.location ? `, ${r.location}` : ""}
-                </p>
-                <p className="mt-1 text-xs font-semibold text-wine-deep">
-                  {r.budget_min || r.budget_max
-                    ? `${formatINR(Number(r.budget_min ?? 0))} – ${formatINR(Number(r.budget_max ?? 0))}`
-                    : "Budget flexible"}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <EmptyState text="No requirements posted yet." />
-        )}
-      </Section>
-
       <Section title="🚚 Popular services" action="View all" actionTo="/services">
         {services?.length ? (
           <HScroll>
@@ -340,6 +300,47 @@ function Index() {
           <EmptyState text="No services listed yet." />
         )}
       </Section>
+
+      {/* Parcel Services — Lucknow → Lucknow local courier (replaces the
+          Featured properties strip's slot; the featured listings themselves
+          remain visible via /search and admin tools). */}
+      <ParcelServices />
+
+      <Section title="🔎 People looking for property" action="View all" actionTo="/requirements">
+        {requirements?.length ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {requirements.map((r) => (
+              <div key={r.id} className="rounded-2xl border bg-card p-3 shadow-soft">
+                <p className="text-sm font-semibold">{r.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {r.purpose} · {r.city}
+                  {r.location ? `, ${r.location}` : ""}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-wine-deep">
+                  {r.budget_min || r.budget_max
+                    ? `${formatINR(Number(r.budget_min ?? 0))} – ${formatINR(Number(r.budget_max ?? 0))}`
+                    : "Budget flexible"}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState text="No requirements posted yet." />
+        )}
+      </Section>
+
+      <Section title="🏠 Latest listings" action="View all" actionTo="/search">
+        {latest?.length ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {(latest as ListingRow[]).map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState text="No listings yet. Be the first to post one!" />
+        )}
+      </Section>
+
 
       {popularLocations.length ? (
         <Section title="📍 Popular locations">
