@@ -62,6 +62,9 @@ type FeatureCard = {
   id: ParcelDialog;
   art: string;
   title: string;
+  /** Shorter mobile-only wording (<640px) so the one-card-per-view layout
+      stays compact and uniform; ≥640px keeps the full desktop title. */
+  titleM: string;
   desc: string;
   cta: string;
   icon: LucideIcon;
@@ -75,6 +78,7 @@ const CARDS: FeatureCard[] = [
     id: "book",
     art: "/parcel/book-parcel.svg",
     title: "Book Your Parcel",
+    titleM: "Book Parcel",
     desc: "Quick & easy parcel booking in just a few steps.",
     cta: "Book Now",
     icon: Package,
@@ -86,6 +90,7 @@ const CARDS: FeatureCard[] = [
     id: "track",
     art: "/parcel/track-parcel.svg",
     title: "Track in Real-Time",
+    titleM: "Track Parcel",
     desc: "Know exactly where your parcel is.",
     cta: "Track Now",
     icon: MapPin,
@@ -97,6 +102,7 @@ const CARDS: FeatureCard[] = [
     id: "safety",
     art: "/parcel/safe-parcel.svg",
     title: "Safe & Reliable",
+    titleM: "Safe & Reliable",
     desc: "Your parcel is in safe hands.",
     cta: "Learn More",
     icon: ShieldCheck,
@@ -244,8 +250,11 @@ export function ParcelServices() {
             "meet" keeps every route point, pin and the van fully inside the
             visible box at any phone width. Van animation uses the pure-SMIL
             fallback (identical visuals) so it renders on all mobile engines,
-            including iOS Safari where CSS offset-path on SVG is unsupported. */}
-        <div aria-hidden className="border-t border-border/60 p-2 pb-0 lg:hidden">
+            including iOS Safari where CSS offset-path on SVG is unsupported.
+            `relative` is REQUIRED: without it this static div paints BELOW
+            the opaque absolute backdrop gradient (CSS positioned > in-flow
+            paint order) and the whole map renders white/blank on phones. */}
+        <div aria-hidden className="relative border-t border-border/60 p-2 pb-0 lg:hidden">
           <RouteMap idPrefix="pm" crop="meet" className="h-auto w-full" />
         </div>
       </div>
@@ -295,9 +304,13 @@ export function ParcelServices() {
                     </span>
                     <span className="flex grow flex-col items-start gap-1 p-4 text-foreground">
                       <span className="font-display text-base font-bold leading-snug">
-                        {c.title}
+                        {/* Compact mobile wording / no caption (<640px) keeps
+                            all three cards uniform; ≥640px shows the full
+                            desktop title + description unchanged. */}
+                        <span className="hidden sm:inline">{c.title}</span>
+                        <span className="sm:hidden">{c.titleM}</span>
                       </span>
-                      <span className="text-xs leading-relaxed text-muted-foreground">
+                      <span className="hidden text-xs leading-relaxed text-muted-foreground sm:inline">
                         {c.desc}
                       </span>
                       <span
